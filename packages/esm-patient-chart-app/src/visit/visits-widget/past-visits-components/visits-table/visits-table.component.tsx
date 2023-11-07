@@ -66,6 +66,10 @@ const VisitTable: React.FC<VisitTableProps> = ({ showAllEncounters, visits, pati
   const { t } = useTranslation();
   const desktopLayout = isDesktop(useLayoutType());
   const session = useSession();
+  const encountersToRemove = ['Lab Results', 'Visit Note'];
+  const filteredEncounters = showAllEncounters
+    ? visits
+    : visits?.filter(({ encounterType }) => !encountersToRemove.includes(encounterType));
 
   const [htmlFormEntryFormsConfig, setHtmlFormEntryFormsConfig] = useState<Array<HtmlFormEntryForm> | undefined>();
 
@@ -75,21 +79,21 @@ const VisitTable: React.FC<VisitTableProps> = ({ showAllEncounters, visits, pati
     });
   });
 
-  const encounterTypes = [...new Set(visits.map((encounter) => encounter.encounterType))].sort();
+  const encounterTypes = [...new Set(filteredEncounters.map((encounter) => encounter.encounterType))].sort();
 
   const [filter, setFilter] = useState('');
 
   const filteredRows = useMemo(() => {
     if (!filter || filter == 'All') {
-      return visits;
+      return filteredEncounters;
     }
 
     if (filter) {
-      return visits?.filter((encounter) => encounter.encounterType === filter);
+      return filteredEncounters?.filter((encounter) => encounter.encounterType === filter);
     }
 
-    return visits;
-  }, [filter, visits]);
+    return filteredEncounters;
+  }, [filter, filteredEncounters]);
 
   const { results: paginatedVisits, goTo, currentPage } = usePagination(filteredRows ?? [], visitCount);
 
@@ -195,7 +199,7 @@ const VisitTable: React.FC<VisitTableProps> = ({ showAllEncounters, visits, pati
     );
   };
 
-  if (!visits?.length) {
+  if (!filteredEncounters?.length) {
     return (
       <p className={classNames(styles.bodyLong01, styles.text02)}>{t('noEncountersFound', 'No encounters found')}</p>
     );
@@ -208,7 +212,7 @@ const VisitTable: React.FC<VisitTableProps> = ({ showAllEncounters, visits, pati
       rows={tableRows}
       overflowMenuOnHover={desktopLayout}
       size={desktopLayout ? 'sm' : 'lg'}
-      useZebraStyles={visits?.length > 1 ? true : false}
+      useZebraStyles={filteredEncounters?.length > 1 ? true : false}
     >
       {({
         rows,
@@ -262,7 +266,7 @@ const VisitTable: React.FC<VisitTableProps> = ({ showAllEncounters, visits, pati
               </TableHead>
               <TableBody>
                 {rows.map((row) => {
-                  const selectedVisit = visits.find((visit) => visit.id === row.id);
+                  const selectedVisit = filteredEncounters.find((visit) => visit.id === row.id);
 
                   return (
                     <React.Fragment key={row.id}>
