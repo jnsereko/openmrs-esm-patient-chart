@@ -60,10 +60,6 @@ jest.mock('@openmrs/esm-patient-common-lib', () => {
 });
 
 jest.mock('../vitals.resource', () => ({
-  assessValue: jest.fn(),
-  getReferenceRangesForConcept: jest.fn(),
-  generatePlaceholder: jest.fn(),
-  interpretBloodPressure: jest.fn(),
   savePatientVitals: jest.fn(),
   useVitals: jest.fn().mockImplementation(() => ({
     mutate: jest.fn,
@@ -192,7 +188,7 @@ describe('VitalsBiometricsForm', () => {
     );
   });
 
-  it('renders an error notification if there was a problem saving vitals and biometrics', async () => {
+  it('renders an error notification if there was a problem saving vital biometrics', async () => {
     const user = userEvent.setup();
 
     const error = {

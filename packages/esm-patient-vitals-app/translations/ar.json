@@ -1,5 +1,4 @@
 {
-  "abnormalValue": "Abnormal value",
   "add": "أضف",
   "additionalNoteText": "اكتب أي ملاحظات إضافية هنا",
   "bloodPressure": "ضغط الدم",
@@ -20,6 +19,7 @@
   "muac": "MUAC",
   "noDataRecorded": "لم يتم تسجيل أي بيانات لهذا المريض",
   "notes": "ملاحظات",
+  "numericInputError": "يجب أن يكون رقمًا ضمن النطاقات المقبولة",
   "other": "أخرى",
   "overdue": "متأخر",
   "oxygenSaturation": "تشبع الأكسجين",
@@ -39,7 +39,6 @@
   "temperature": "درجة الحرارة",
   "temperatureAbbreviated": "درجة الحرارة",
   "unknown": "غير معروف",
-  "validationInputError": "Value must be between {{min}} and {{max}}",
   "vitals": "العلامات الحيوية",
   "vitalsAndBiometrics": "العلامات الحيوية والقياسات البيومترية",
   "vitalsAndBiometricsNowAvailable": "هم الآن مرئيون على صفحة العلامات الحيوية والقياسات البيومترية",

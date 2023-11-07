@@ -1,5 +1,4 @@
 {
-  "abnormalValue": "Abnormal value",
   "add": "הוסף",
   "additionalNoteText": "הקלד הערות נוספות כאן",
   "bloodPressure": "לחץ דם",
@@ -20,6 +19,7 @@
   "muac": "MUAC",
   "noDataRecorded": "לא נרשמו נתונים עבור מטופל זה",
   "notes": "הערות",
+  "numericInputError": "חייב להיות מספר בטווח התקין",
   "other": "Other",
   "overdue": "מאחר",
   "oxygenSaturation": "רווי חמצן",
@@ -39,7 +39,6 @@
   "temperature": "טמפרטורה",
   "temperatureAbbreviated": "טמפ'",
   "unknown": "Unknown",
-  "validationInputError": "Value must be between {{min}} and {{max}}",
   "vitals": "מדדים חיוניים",
   "vitalsAndBiometrics": "מדדים חיוניים וביומטרים",
   "vitalsAndBiometricsNowAvailable": "הם כעת זמינים בדף מדדים חיוניים וביומטרים",
