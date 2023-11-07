@@ -36,30 +36,36 @@ const VitalsChart: React.FC<VitalsChartProps> = ({ patientVitals, conceptUnits, 
     value: 'systolic',
   });
 
+  const withTranslations = (label: string, unit: string | null | undefined) => {
+    const translatedLabel = t(label);
+    const translatedUnit = unit ? t(unit) : null;
+    return withUnit(translatedLabel, translatedUnit);
+  };
+
   const vitalSigns = [
     {
       id: 'bloodPressure',
-      title: withUnit(t('bp', 'BP'), conceptUnits.get(config.concepts.systolicBloodPressureUuid) ?? '-'),
+      title: withTranslations('bp', conceptUnits.get(config.concepts.systolicBloodPressureUuid) ?? ''),
       value: 'systolic',
     },
     {
       id: 'oxygenSaturation',
-      title: withUnit(t('spo2', 'SpO2'), conceptUnits.get(config.concepts.oxygenSaturationUuid) ?? '-'),
+      title: withTranslations('spo2', conceptUnits.get(config.concepts.oxygenSaturationUuid) ?? ''),
       value: 'spo2',
     },
     {
       id: 'temperature',
-      title: withUnit(t('temp', 'Temp'), conceptUnits.get(config.concepts.temperatureUuid) ?? '-'),
+      title: withTranslations('temp', conceptUnits.get(config.concepts.temperatureUuid) ?? ''),
       value: 'temperature',
     },
     {
       id: 'respiratoryRate',
-      title: withUnit(t('respiratoryRate', 'R. rate'), conceptUnits.get(config.concepts.respiratoryRateUuid) ?? '-'),
+      title: withTranslations('respiratoryRate', conceptUnits.get(config.concepts.respiratoryRateUuid) ?? ''),
       value: 'respiratoryRate',
     },
     {
       id: 'pulse',
-      title: withUnit(t('pulse', 'Pulse'), conceptUnits.get(config.concepts.pulseUuid) ?? '-'),
+      title: withTranslations('pulse', conceptUnits.get(config.concepts.pulseUuid) ?? ''),
       value: 'pulse',
     },
   ];

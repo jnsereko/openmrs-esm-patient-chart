@@ -43,15 +43,18 @@ const BiometricsBase: React.FC<BiometricsBaseProps> = ({ patientUuid, pageSize, 
     [config, currentVisit],
   );
 
+  const withTranslations = (label: string, unit?: string | null | undefined) => {
+    const translatedLabel = t(label);
+    const translatedUnit = unit ? t(unit) : null;
+    return withUnit(translatedLabel, translatedUnit);
+  };
+
   const tableHeaders = [
-    { key: 'date', header: t('dateAndTime', 'Date and time') },
-    { key: 'weight', header: withUnit(t('weight', 'Weight'), conceptUnits.get(config.concepts.weightUuid) ?? '') },
-    { key: 'height', header: withUnit(t('height', 'Height'), conceptUnits.get(config.concepts.heightUuid) ?? '') },
-    { key: 'bmi', header: `${t('bmi', 'BMI')} (${bmiUnit})` },
-    {
-      key: 'muac',
-      header: withUnit(t('muac', 'MUAC'), conceptUnits.get(config.concepts.midUpperArmCircumferenceUuid) ?? ''),
-    },
+    { key: 'date', header: withTranslations('dateAndTime') },
+    { key: 'weight', header: withTranslations('weight', conceptUnits.get(config.concepts.weightUuid) ?? '') },
+    { key: 'height', header: withTranslations('height', conceptUnits.get(config.concepts.heightUuid) ?? '') },
+    { key: 'bmi', header: withTranslations('bmi', bmiUnit) },
+    { key: 'muac', header: withTranslations(t('muac'), conceptUnits.get(config.concepts.muacUuid) ?? '') },
   ];
 
   const tableRows = useMemo(

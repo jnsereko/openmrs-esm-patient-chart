@@ -7,6 +7,7 @@ import { formatDate, parseDate } from '@openmrs/esm-framework';
 import { ConfigObject } from '../config-schema';
 import { type PatientVitals } from '../common';
 import styles from './biometrics-chart.scss';
+import { withUnit } from '@openmrs/esm-patient-common-lib';
 
 enum ScaleTypes {
   LABELS = 'labels',
@@ -38,6 +39,12 @@ const BiometricsChart: React.FC<BiometricsChartProps> = ({ patientBiometrics, co
     value: 'weight',
     groupName: 'weight',
   });
+
+  const withTranslations = (label: string, unit?: string | null | undefined) => {
+    const translatedLabel = t(label);
+    const translatedUnit = unit ? t(unit) : null;
+    return withUnit(translatedLabel, translatedUnit);
+  };
 
   const chartData = React.useMemo(
     () =>
@@ -103,13 +110,13 @@ const BiometricsChart: React.FC<BiometricsChartProps> = ({ patientBiometrics, co
             {[
               {
                 id: 'weight',
-                label: `${t('weight', 'Weight')} (${conceptUnits.get(config.concepts.weightUuid) ?? ''})`,
+                label: withTranslations('weight', conceptUnits.get(config.concepts.weightUuid) ?? ''),
               },
               {
                 id: 'height',
-                label: `${t('height', 'Height')} (${conceptUnits.get(config.concepts.heightUuid) ?? ''})`,
+                label: withTranslations('height', conceptUnits.get(config.concepts.heightUuid) ?? ''),
               },
-              { id: 'bmi', label: `${t('bmi', 'BMI')} (${bmiUnit})` },
+              { id: 'bmi', label: withTranslations('bmi', bmiUnit) },
             ].map(({ id, label }) => (
               <Tab
                 className={classNames(styles.tab, styles.bodyLong01, {

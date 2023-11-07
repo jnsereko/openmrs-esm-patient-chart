@@ -76,24 +76,30 @@ const VitalsOverview: React.FC<VitalsOverviewProps> = ({ patientUuid, pageSize, 
     };
   }, [patient, t, excludePatientIdentifierCodeTypes?.uuids]);
 
+  const withTranslations = (label: string, unit: string | null | undefined) => {
+    const translatedLabel = t(label);
+    const translatedUnit = unit ? t(unit) : null;
+    return withUnit(translatedLabel, translatedUnit);
+  };
+
   const tableHeaders = [
-    { key: 'date', header: 'Date and time', isSortable: true },
+    { key: 'date', header: t('dateAndTime', 'Date and time'), isSortable: true },
     {
       key: 'temperature',
-      header: withUnit('Temp', conceptUnits.get(config.concepts.temperatureUuid) ?? ''),
+      header: withTranslations('temp', conceptUnits.get(config.concepts.temperatureUuid) ?? ''),
     },
     {
       key: 'bloodPressure',
-      header: withUnit('BP', conceptUnits.get(config.concepts.systolicBloodPressureUuid) ?? ''),
+      header: withTranslations('bp', conceptUnits.get(config.concepts.systolicBloodPressureUuid) ?? ''),
     },
-    { key: 'pulse', header: withUnit('Pulse', conceptUnits.get(config.concepts.pulseUuid) ?? '') },
+    { key: 'pulse', header: withTranslations('pulse', conceptUnits.get(config.concepts.pulseUuid) ?? '') },
     {
       key: 'respiratoryRate',
-      header: withUnit('R. Rate', conceptUnits.get(config.concepts.respiratoryRateUuid) ?? ''),
+      header: withTranslations('respiratoryRate', conceptUnits.get(config.concepts.respiratoryRateUuid) ?? ''),
     },
     {
       key: 'spo2',
-      header: withUnit('SPO2', conceptUnits.get(config.concepts.oxygenSaturationUuid) ?? ''),
+      header: withTranslations('spo2', conceptUnits.get(config.concepts.oxygenSaturationUuid) ?? ''),
     },
   ];
 
