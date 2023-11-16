@@ -21,6 +21,10 @@ export default {
     _type: Type.ConceptUuid,
     _default: 'c75f120a-04ec-11e3-8780-2b40bef9a44b',
   },
+  diagnosisFiledRequired: {
+    _type: Type.Boolean,
+    _default: false,
+  },
 };
 
 export interface VisitNoteConfigObject {
@@ -28,4 +32,5 @@ export interface VisitNoteConfigObject {
   encounterNoteTextConceptUuid: string;
   encounterTypeUuid: string;
   formConceptUuid: string;
+  diagnosisFiledRequired: boolean;
 }

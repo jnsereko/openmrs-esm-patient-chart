@@ -68,8 +68,13 @@ const VisitNotesForm: React.FC<DefaultWorkspaceProps> = ({ closeWorkspace, patie
   const session = useSession();
   const config = useConfig() as ConfigObject;
   const state = useMemo(() => ({ patientUuid }), [patientUuid]);
-  const { clinicianEncounterRole, encounterNoteTextConceptUuid, encounterTypeUuid, formConceptUuid } =
-    config.visitNoteConfig;
+  const {
+    clinicianEncounterRole,
+    encounterNoteTextConceptUuid,
+    encounterTypeUuid,
+    formConceptUuid,
+    diagnosisFiledRequired,
+  } = config.visitNoteConfig;
   const [isHandlingSubmit, setIsHandlingSubmit] = useState(false);
   const [loadingPrimary, setLoadingPrimary] = useState<boolean>(false);
   const [loadingSecondary, setLoadingSecondary] = useState<boolean>(false);
@@ -87,6 +92,7 @@ const VisitNotesForm: React.FC<DefaultWorkspaceProps> = ({ closeWorkspace, patie
       noteDate: new Date(),
     },
   });
+  console.log('my diagnosisFiledRequired', diagnosisFiledRequired);
 
   const { mutateVisitNotes } = useVisitNotes(patientUuid);
   const locationUuid = session?.sessionLocation?.uuid;
