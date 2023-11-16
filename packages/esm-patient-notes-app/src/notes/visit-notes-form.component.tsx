@@ -85,9 +85,17 @@ const VisitNotesForm: React.FC<DefaultWorkspaceProps> = ({ closeWorkspace, patie
   const [combinedDiagnoses, setCombinedDiagnoses] = useState<Array<Diagnosis>>([]);
   const [rows, setRows] = useState<number>();
 
+  const modifiedVisitNoteFormSchema = diagnosisFiledRequired
+    ? visitNoteFormSchema.extend({
+        primaryDiagnosisSearch: z.string({
+          required_error: 'Choose at least one primary diagnosis',
+        }),
+      })
+    : visitNoteFormSchema;
+
   const { control, handleSubmit, watch, getValues, setValue, formState } = useForm<VisitNotesFormData>({
     mode: 'onSubmit',
-    resolver: zodResolver(visitNoteFormSchema),
+    resolver: zodResolver(modifiedVisitNoteFormSchema),
     defaultValues: {
       noteDate: new Date(),
     },
