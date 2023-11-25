@@ -118,6 +118,14 @@ export const esmPatientChartSchema = {
       "Whether the visit location field in the Start Visit form should be view-only. If so, the visit location will always be set to the user's login location.",
     _default: false,
   },
+  excludedEncounterTypes: {
+    _type: Type.Array,
+    _description: 'Encounter types used to filter the visit summary requests',
+    _elements: {
+      _type: Type.String,
+    },
+    _default: [],
+  },
 };
 
 export interface ChartConfig {
@@ -140,6 +148,7 @@ export interface ChartConfig {
     name: string;
   };
   disableChangingVisitLocation: boolean;
+  excludedEncounterTypes: Array<string>;
 }
 
 export const configSchema = {

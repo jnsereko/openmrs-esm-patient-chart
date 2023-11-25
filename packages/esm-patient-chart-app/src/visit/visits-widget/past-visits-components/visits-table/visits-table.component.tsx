@@ -34,6 +34,7 @@ import {
   parseDate,
   showModal,
   showToast,
+  useConfig,
   useLayoutType,
   usePagination,
   useSession,
@@ -41,10 +42,11 @@ import {
 } from '@openmrs/esm-framework';
 import { launchPatientWorkspace, PatientChartPagination } from '@openmrs/esm-patient-common-lib';
 import type { HtmlFormEntryForm } from '@openmrs/esm-patient-forms-app/src/config-schema';
-import { deleteEncounter } from './visits-table.resource';
+import { deleteEncounter, useEncounterTypesToExclude } from './visits-table.resource';
 import { MappedEncounter } from '../../visit.resource';
 import EncounterObservations from '../../encounter-observations';
 import styles from './visits-table.scss';
+import { ChartConfig } from '../../../../config-schema';
 
 interface VisitTableProps {
   visits: Array<MappedEncounter>;
@@ -66,10 +68,28 @@ const VisitTable: React.FC<VisitTableProps> = ({ showAllEncounters, visits, pati
   const { t } = useTranslation();
   const desktopLayout = isDesktop(useLayoutType());
   const session = useSession();
-  const encountersToRemove = ['Lab Results', 'Visit Note'];
-  const filteredEncounters = showAllEncounters
-    ? visits
-    : visits?.filter(({ encounterType }) => !encountersToRemove.includes(encounterType));
+  const { excludedEncounterTypes: visitEncounterTypes } = useConfig<ChartConfig>();
+  const [filteredEncounters, setFilteredEncounters] = useState([]);
+
+  const {
+    isLoading: isLoadingEncounterTypes,
+    excludedEncounterTypes: visitEncounterTypesToExclude,
+    error: visitEncounterTypesError,
+  } = useEncounterTypesToExclude(visitEncounterTypes);
+
+  useEffect(() => {
+    if (showAllEncounters) {
+      setFilteredEncounters(visits);
+    } else {
+      if (!isLoadingEncounterTypes && visitEncounterTypesToExclude.length !== 0) {
+        setFilteredEncounters(
+          visits?.filter(({ encounterType }) =>
+            visitEncounterTypesToExclude.every(({ display }) => display !== encounterType),
+          ),
+        );
+      }
+    }
+  }, [isLoadingEncounterTypes, showAllEncounters, visitEncounterTypesToExclude]);
 
   const [htmlFormEntryFormsConfig, setHtmlFormEntryFormsConfig] = useState<Array<HtmlFormEntryForm> | undefined>();
 
