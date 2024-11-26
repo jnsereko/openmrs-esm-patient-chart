@@ -1,4 +1,5 @@
 import { Type } from '@openmrs/esm-framework';
+import _default from 'react-hook-form/dist/logic/appendErrors';
 
 export const configSchema = {
   contactAttributeTypes: {
@@ -13,108 +14,9 @@ export const configSchema = {
     },
   },
   printPatientSticker: {
-    header: {
-      _type: Type.Object,
-      _description: 'Configuration properties for patient identifier stickers',
-      showBarcode: {
-        _type: Type.Boolean,
-        _description: 'Whether to display a barcode on the patient sticker',
-      },
-      showLogo: {
-        _type: Type.Boolean,
-        _description: 'Whether to display a logo on the patient sticker',
-      },
-      logo: {
-        _type: Type.String,
-        _description: 'The URL of the logo to display in the patient sticker',
-      },
-      _default: {
-        showBarcode: true,
-        showLogo: true,
-        logo: '',
-      },
-    },
-    printStickerFields: {
-      _type: Type.Object,
-      _description: 'Configuration of the patient sticker fields for the patient identifier stickers',
-      fields: {
-        _type: Type.Array,
-        _description: 'Patient demographics to include in the patient sticker printout',
-      },
-      fieldSeparator: {
-        _type: Type.Boolean,
-        _description: 'Whether to display a colon symbol alongside each field label',
-      },
-      fieldsTableGroups: {
-        _type: Type.Array,
-        _description:
-          'Groups of patient demographic fields to be displayed as distinct tables in the patient sticker. Each group contains a set of related fields that will appear together in one table ie a single line.',
-      },
-      fieldsContainerStyleOverrides: {
-        _type: Type.Object,
-        _description: 'CSS style elements override how fields appear in the field container.',
-      },
-      _default: {
-        fields: ['name', 'dob', 'gender', 'identifier', 'age', 'contact', 'address'],
-        fieldSeparator: false,
-        fieldsTableGroups: [],
-        fieldsContainerStyleOverrides: {},
-      },
-    },
-    pageSize: {
-      _type: Type.String,
-      _description:
-        'Specifies the paper size for printing the sticker. You can define the size using units (e.g., mm, in) or named sizes (e.g., "148mm 210mm", "A1", "A2", "A4", "A5").',
-      _default: 'A4',
-    },
-    printMultipleStickers: {
-      _type: Type.Object,
-      _description: 'Configuration of how many stickers to print, together with the columns and rows to print per page',
-      numberOfStickers: {
-        _type: Type.Number,
-        _description: 'The number of patient ID stickers to print',
-      },
-      stickerColumnsPerPage: {
-        _type: Type.Number,
-        _description: 'The number of columns of patient ID stickers to print per page',
-      },
-      stickerRowsPerPage: {
-        _type: Type.Number,
-        _description: 'The number of rows of patient ID stickers to print per page',
-      },
-      _default: {
-        enabled: false,
-        numberOfStickers: 1,
-        stickerColumnsPerPage: 1,
-        stickerRowsPerPage: 1,
-      },
-    },
-    stickerSize: {
-      _type: Type.Object,
-      _description: 'Configuration of the patient sticker height and width for the patient identifier stickers',
-      height: {
-        _type: Type.String,
-        _description:
-          'Specifies the height of each patient ID sticker in the printout in units such as inches or centimetres.',
-      },
-      width: {
-        _type: Type.String,
-        _description: 'The width of each patient ID sticker in the printout in units such as inches or centimetres.',
-      },
-      _default: {
-        height: 'auto',
-        width: 'auto',
-      },
-    },
-    identifiersToDisplay: {
-      _type: Type.Array,
-      _description:
-        'List of UUIDs of patient identifier types to include on the patient sticker. If empty, all identifiers will be displayed.',
-      _default: [],
-      _elements: {
-        _type: Type.UUID,
-      },
-    },
+    _type: Type.String,
+    _description: 'URL for the configuration properties for patient identifier stickers',
+    _default: '',
   },
   useRelationshipNameLink: {
     _type: Type.Boolean,
@@ -127,29 +29,30 @@ export type AllowedPatientFields = 'address' | 'age' | 'contact' | 'dob' | 'gend
 
 export interface ConfigObject {
   contactAttributeTypes: Array<string>;
-  printPatientSticker: {
-    header: {
-      showBarcode: boolean;
-      showLogo: boolean;
-      logo: string;
-    };
-    printStickerFields: {
-      fields: Array<AllowedPatientFields>;
-      fieldSeparator: boolean;
-      fieldsTableGroups: Array<Array<AllowedPatientFields>>;
-      fieldsContainerStyleOverrides: Record<string, string | number>;
-    };
-    pageSize: string;
-    printMultipleStickers: {
-      numberOfStickers: number;
-      stickerColumnsPerPage: number;
-      stickerRowsPerPage: number;
-    };
-    stickerSize: {
-      height: string;
-      width: string;
-    };
-    identifiersToDisplay: Array<string>;
-  };
+  printPatientStickerConfig: string;
+  // printPatientSticker: {
+  //   header: {
+  //     showBarcode: boolean;
+  //     showLogo: boolean;
+  //     logo: string;
+  //   };
+  //   printStickerFields: {
+  //     fields: Array<AllowedPatientFields>;
+  //     fieldSeparator: boolean;
+  //     fieldsTableGroups: Array<Array<AllowedPatientFields>>;
+  //     fieldsContainerStyleOverrides: Record<string, string | number>;
+  //   };
+  //   pageSize: string;
+  //   printMultipleStickers: {
+  //     numberOfStickers: number;
+  //     stickerColumnsPerPage: number;
+  //     stickerRowsPerPage: number;
+  //   };
+  //   stickerSize: {
+  //     height: string;
+  //     width: string;
+  //   };
+  //   identifiersToDisplay: Array<string>;
+  // };
   useRelationshipNameLink: boolean;
 }

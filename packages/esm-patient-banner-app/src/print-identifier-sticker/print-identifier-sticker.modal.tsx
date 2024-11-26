@@ -1,4 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import ReactDOMServer from 'react-dom/server';
 import classNames from 'classnames';
 import { useTranslation } from 'react-i18next';
 import { useReactToPrint } from 'react-to-print';
@@ -18,32 +19,26 @@ import { getPatientName, getCoreTranslation, showSnackbar, useConfig } from '@op
 import { type ConfigObject } from '../config-schema';
 import PrintComponent from './print-identifier-sticker.component';
 import styles from './print-identifier-sticker.scss';
-import { toSvg } from 'html-to-image';
-import PrintSizeWrapper from './print-size-wrapper.component';
+import { type PrintPatientStickerConfig, usePrintPatientStickerConfig } from './print-identifier-sticker.resource';
+import { PDFViewer, Document, Page, View, Text } from '@react-pdf/renderer';
+import { jsPDF } from 'jspdf';
+
 interface PrintIdentifierStickerProps {
   closeModal: () => void;
   patient: fhir.Patient;
 }
 
-interface PrintMultipleStickersComponentProps
-  extends Pick<ConfigObject['printPatientSticker'], 'pageSize' | 'printMultipleStickers' | 'stickerSize'> {
-  pageSize: string;
+interface PrintMultipleStickersComponentProps {
   patient: fhir.Patient;
-  printMultipleStickers: {
-    numberOfStickers: number;
-    stickerColumnsPerPage: number;
-    stickerRowsPerPage: number;
-  };
-  stickerSize: {
-    height: string;
-    width: string;
-  };
+  printPatientSticker: PrintPatientStickerConfig;
+  isError?: boolean;
+  isLoading?: boolean;
 }
 
 const PrintIdentifierSticker: React.FC<PrintIdentifierStickerProps> = ({ closeModal, patient }) => {
   const { t } = useTranslation();
-  const { printPatientSticker } = useConfig<ConfigObject>();
-  const { pageSize, printMultipleStickers, stickerSize } = printPatientSticker ?? {};
+  const { printPatientStickerConfig } = useConfig<ConfigObject>();
+  const { printPatientSticker, isError, isLoading } = usePrintPatientStickerConfig(printPatientStickerConfig);
   const [isPrinting, setIsPrinting] = useState(false);
   const headerTitle = t('patientIdentifierSticker', 'Patient identifier sticker');
 
@@ -55,6 +50,29 @@ const PrintIdentifierSticker: React.FC<PrintIdentifierStickerProps> = ({ closeMo
       onBeforeGetContentResolve.current();
     }
   }, [isPrinting]);
+
+  const generatePDF = useCallback(() => {
+    if (contentToPrintRef.current) {
+      setIsPrinting(true);
+      const doc = new jsPDF({
+        unit: 'mm',
+        orientation: 'l',
+        format: [50, 70],
+      });
+      doc.getFormObject;
+      doc.html(contentToPrintRef.current, {
+        callback: (pdf) => {
+          pdf.setFontSize(2);
+          pdf.save('stickers.pdf');
+          pdf.autoPrint();
+          window.open(doc.output('bloburl'), '_blank');
+          setIsPrinting(false);
+        },
+        x: 0,
+        y: 0,
+      });
+    }
+  }, []);
 
   const handleBeforeGetContent = useCallback(
     () =>
@@ -119,9 +137,7 @@ const PrintIdentifierSticker: React.FC<PrintIdentifierStickerProps> = ({ closeMo
       />
       <ModalBody aria-label={t('printIdentifierStickerModal', 'Print identifier sticker modal')} hasScrollingContent>
         <PrintMultipleStickersComponent
-          pageSize={pageSize}
-          printMultipleStickers={printMultipleStickers}
-          stickerSize={stickerSize}
+          printPatientSticker={printPatientSticker}
           patient={patient}
           ref={contentToPrintRef}
         />
@@ -130,7 +146,7 @@ const PrintIdentifierSticker: React.FC<PrintIdentifierStickerProps> = ({ closeMo
         <Button kind="secondary" onClick={closeModal}>
           {getCoreTranslation('cancel', 'Cancel')}
         </Button>
-        <Button className={styles.button} disabled={isPrinting} onClick={handlePrint} kind="primary">
+        <Button className={styles.button} disabled={isPrinting} onClick={generatePDF} kind="primary">
           {isPrinting ? (
             <InlineLoading className={styles.loader} description={getCoreTranslation('printing', 'Printing') + '...'} />
           ) : (
@@ -143,23 +159,21 @@ const PrintIdentifierSticker: React.FC<PrintIdentifierStickerProps> = ({ closeMo
 };
 
 const PrintMultipleStickersComponent = forwardRef<HTMLDivElement, PrintMultipleStickersComponentProps>(
-  ({ pageSize, printMultipleStickers, stickerSize, patient }, ref) => {
-    const svgDivRef = useRef<HTMLDivElement>();
-
-    const divRef = useRef<HTMLDivElement>();
+  ({ printPatientSticker, patient }, ref) => {
+    const divRef = useRef<HTMLIFrameElement>();
     const { t } = useTranslation();
 
-    const { height: printIdentifierStickerHeight, width: printIdentifierStickerWidth } = stickerSize ?? {};
+    const { height: printIdentifierStickerHeight, width: printIdentifierStickerWidth } = printPatientSticker ?? {};
     const [numberOfLabelColumnsPage, setNumberOfLabelColumnsPage] = useState<number>(
-      printMultipleStickers.stickerColumnsPerPage,
+      printPatientSticker.numberOfColumnsPerPage,
     );
     const [numberOfLabelRowsPerPage, setNumberOfLabelRowsPerPage] = useState<number>(
-      printMultipleStickers.stickerRowsPerPage,
+      printPatientSticker.numberOfRowsPerPage,
     );
-    const [numberOfLabels, setNumberOfLabels] = useState<number>(printMultipleStickers.numberOfStickers);
+    const [numberOfLabels, setNumberOfLabels] = useState<number>(printPatientSticker.numberOfStickers);
     const [isPreviewVisible, setIsPreviewVisible] = useState(false);
     const [isMultipleStickersEnabled, setIsMultipleStickersEnabled] = useState(
-      printMultipleStickers.numberOfStickers > 1,
+      printPatientSticker.numberOfStickers > 1,
     );
 
     const [svgDataSource, setSvgDataSource] = useState('');
@@ -171,7 +185,7 @@ const PrintMultipleStickersComponent = forwardRef<HTMLDivElement, PrintMultipleS
     useEffect(() => {
       if (divRef.current) {
         const style = divRef.current.style;
-        style.setProperty('--omrs-print-label-paper-size', pageSize);
+        style.setProperty('--omrs-print-label-paper-size', 'auto');
         style.setProperty('--omrs-print-label-columns', numberOfLabelColumnsPage.toString());
         style.setProperty('--omrs-print-label-rows', numberOfLabelRowsPerPage.toString());
         style.setProperty('--omrs-print-label-sticker-height', printIdentifierStickerHeight.toString());
@@ -181,26 +195,9 @@ const PrintMultipleStickersComponent = forwardRef<HTMLDivElement, PrintMultipleS
       numberOfLabelColumnsPage,
       numberOfLabelRowsPerPage,
       printIdentifierStickerHeight,
-      pageSize,
       printIdentifierStickerWidth,
+      printPatientSticker?.pageSize,
     ]);
-
-    useEffect(() => {
-      if (svgDivRef.current) {
-        toSvg(svgDivRef.current, { cacheBust: true })
-          .then((dataUrl) => {
-            setSvgDataSource(dataUrl);
-          })
-          .catch((err) => {
-            showSnackbar({
-              isLowContrast: false,
-              kind: 'error',
-              title: getCoreTranslation('printError', 'Print error'),
-              subtitle: err,
-            });
-          });
-      }
-    }, [svgDivRef]);
 
     const maxLabelsPerPage = numberOfLabelRowsPerPage * numberOfLabelColumnsPage;
     const pages: Array<typeof labels> = [];
@@ -215,9 +212,6 @@ const PrintMultipleStickersComponent = forwardRef<HTMLDivElement, PrintMultipleS
 
     return (
       <Stack gap={5}>
-        <div ref={svgDivRef}>
-          <PrintComponent patient={patient} />
-        </div>
         <Grid className={styles.gridContainer}>
           <Column lg={6} md={8} sm={4}>
             <Toggle
@@ -283,9 +277,7 @@ const PrintMultipleStickersComponent = forwardRef<HTMLDivElement, PrintMultipleS
                 <div className={styles.labelsContainer}>
                   {pageLabels.map((_label, index) => (
                     <div key={index} className={styles.printContainer}>
-                      <PrintSizeWrapper>
-                        <img id="svg-sample" src={svgDataSource} />
-                      </PrintSizeWrapper>
+                      <PrintComponent patient={patient} />
                     </div>
                   ))}
                 </div>

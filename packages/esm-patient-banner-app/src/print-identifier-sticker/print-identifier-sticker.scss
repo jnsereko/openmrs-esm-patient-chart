@@ -116,57 +116,6 @@
   display: none;
 }
 
-.printRoot {
-  @media print {
-    @page {
-      size: var(--omrs-print-label-paper-size, auto);
-    }
-
-    html,
-    body {
-      height: initial !important;
-      background-color: white;
-    }
-
-    .pageBreak {
-      break-after: page;
-    }
-
-    .stickerContainer {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-  }
-
-  .labelsContainer {
-    grid-template-columns: repeat(var(--omrs-print-label-columns, 1), 1fr);
-    grid-template-rows: repeat(var(--omrs-print-label-rows, 1), auto);
-  }
-
-  .implementationLogo {
-    display: flex;
-    height: 100%;
-  }
-
-  .gridHeaderContainer {
-    padding: 0;
-    border-bottom: 1px solid $brand-01;
-    margin-bottom: layout.$spacing-05;
-
-    :global(.cds--css-grid-column) {
-      margin-left: 0;
-      margin-right: 0;
-    }
-
-    img {
-      width: 100%;
-    }
-  }
-}
-
 .printContainer {
   height: auto;
   width: auto;
@@ -178,6 +127,8 @@
   row-gap: layout.$spacing-05;
   place-items: center;
   background-color: white;
+  grid-template-columns: repeat(var(--omrs-print-label-columns, 1), 1fr);
+  grid-template-rows: repeat(var(--omrs-print-label-rows, 1), auto);
 }
 
 .multipleStickerInputs {
