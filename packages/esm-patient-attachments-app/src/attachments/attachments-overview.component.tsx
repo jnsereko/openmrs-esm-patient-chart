@@ -85,7 +85,16 @@ const AttachmentsOverview: React.FC<AttachmentsOverviewProps> = ({ patientUuid }
   const openAttachment = useCallback(
     async (attachment: Attachment) => {
       const orthancUrl = attachment.description ?? '';
-      if (orthancUrl.includes(':8889')) {
+      // Recognise the viewer link by what it IS, not by where it happens to be hosted.
+      //
+      // This used to test for ':8889' — Orthanc's loopback debug port, which is what the URL
+      // looks like on a local dev stack. On any real deployment the stored link is the public
+      // one (e.g. https://host/pacs/stone-webviewer/...), so the guard was never true, the
+      // token was never requested, and every DICOM attachment opened the viewer unauthenticated
+      // and rendered black. Confirmed on UAT: no request to /orthanc/token was made at all.
+      const isOrthancViewerUrl =
+        orthancUrl.includes('stone-webviewer') || orthancUrl.includes('orthancId=') || orthancUrl.includes(':8889');
+      if (isOrthancViewerUrl) {
         const normalizedUrl = orthancUrl.replace(/&amp;/g, '&');
         const studyIdMatch = normalizedUrl.match(/[?&]study=([^&#+]+)/) || normalizedUrl.match(/#\/studies\/([^?&]+)/);
         const orthancIdMatch = normalizedUrl.match(/[?&]orthancId=([^&]+)/);
@@ -105,9 +114,15 @@ const AttachmentsOverview: React.FC<AttachmentsOverviewProps> = ({ patientUuid }
           });
 
           if (response.status === 401) {
-            // Session expired — redirect to login and come back to this page after
+            // Session expired — re-authenticate, then come back to this page.
+            //
+            // /openmrs/oauth2login, not /openmrs/login.htm: this deployment runs OpenMRS behind
+            // Keycloak with OAUTH2_ENABLED=true, and the oauth2login module's request filter
+            // redirects everything outside its own allowlist to /oauth2login anyway. Sending the
+            // user to the legacy form would bounce them through that redirect and lose the
+            // return path, stranding them on the login page rather than back on the chart.
             const returnUrl = encodeURIComponent(window.location.href);
-            window.location.href = `/openmrs/login.htm?redirect=${returnUrl}`;
+            window.location.href = `/openmrs/oauth2login?redirect=${returnUrl}`;
             return;
           }
 
