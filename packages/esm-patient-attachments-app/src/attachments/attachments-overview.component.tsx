@@ -82,74 +82,25 @@ const AttachmentsOverview: React.FC<AttachmentsOverviewProps> = ({ patientUuid }
     [mutate, t, setAttachmentToPreview],
   );
 
+  // Upstream behaviour, deliberately unchanged: clicking a thumbnail opens the preview panel.
+  //
+  // An earlier revision intercepted DICOM attachments here and jumped straight to the Orthanc
+  // viewer in a new tab, which meant the preview panel never opened for them and they behaved
+  // unlike every other attachment. The token exchange belongs to the "Open DICOM viewer" control
+  // in that panel (see attachment-preview.component.tsx), not to the thumbnail click, so this
+  // handler stays exactly as upstream wrote it.
   const openAttachment = useCallback(
-    async (attachment: Attachment) => {
-      const orthancUrl = attachment.description ?? '';
-      // Recognise the viewer link by what it IS, not by where it happens to be hosted.
-      //
-      // This used to test for ':8889' — Orthanc's loopback debug port, which is what the URL
-      // looks like on a local dev stack. On any real deployment the stored link is the public
-      // one (e.g. https://host/pacs/stone-webviewer/...), so the guard was never true, the
-      // token was never requested, and every DICOM attachment opened the viewer unauthenticated
-      // and rendered black. Confirmed on UAT: no request to /orthanc/token was made at all.
-      const isOrthancViewerUrl =
-        orthancUrl.includes('stone-webviewer') || orthancUrl.includes('orthancId=') || orthancUrl.includes(':8889');
-      if (isOrthancViewerUrl) {
-        const normalizedUrl = orthancUrl.replace(/&amp;/g, '&');
-        const studyIdMatch = normalizedUrl.match(/[?&]study=([^&#+]+)/) || normalizedUrl.match(/#\/studies\/([^?&]+)/);
-        const orthancIdMatch = normalizedUrl.match(/[?&]orthancId=([^&]+)/);
-        const studyId = orthancIdMatch ? orthancIdMatch[1] : studyIdMatch ? studyIdMatch[1] : null;
-        if (!studyId) {
-          showSnackbar({
-            title: t('dicomError', 'DICOM Viewer Error'),
-            subtitle: t('dicomStudyIdError', 'Could not extract study ID from DICOM attachment.'),
-            kind: 'error',
-          });
-          return;
-        }
-        try {
-          const response = await fetch(`/openmrs/ws/rest/v1/orthanc/token?studyId=${encodeURIComponent(studyId)}`, {
-            credentials: 'include',
-            headers: { Accept: 'application/json' },
-          });
-
-          if (response.status === 401) {
-            // Session expired — re-authenticate, then come back to this page.
-            //
-            // /openmrs/oauth2login, not /openmrs/login.htm: this deployment runs OpenMRS behind
-            // Keycloak with OAUTH2_ENABLED=true, and the oauth2login module's request filter
-            // redirects everything outside its own allowlist to /oauth2login anyway. Sending the
-            // user to the legacy form would bounce them through that redirect and lose the
-            // return path, stranding them on the login page rather than back on the chart.
-            const returnUrl = encodeURIComponent(window.location.href);
-            window.location.href = `/openmrs/oauth2login?redirect=${returnUrl}`;
-            return;
-          }
-
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          window.open(data.url, '_blank', 'noopener,noreferrer');
-        } catch (err) {
-          showSnackbar({
-            title: t('dicomError', 'DICOM Viewer Error'),
-            subtitle: t('dicomTokenError', `Could not open DICOM viewer: ${(err as Error).message}`),
-            kind: 'error',
-          });
-        }
-        return;
-      }
-
+    (attachment: Attachment) => {
       if (attachment.bytesContentFamily === 'IMAGE' || attachment.bytesContentFamily === 'PDF') {
         setAttachmentToPreview(attachment);
-        return;
+      } else {
+        const anchor = document.createElement('a');
+        anchor.setAttribute('href', attachment.src);
+        anchor.setAttribute('download', attachment.filename);
+        anchor.click();
       }
-
-      const anchor = document.createElement('a');
-      anchor.setAttribute('href', attachment.src);
-      anchor.setAttribute('download', attachment.filename);
-      anchor.click();
     },
-    [setAttachmentToPreview, t],
+    [setAttachmentToPreview],
   );
 
   const showAddAttachmentModal = useCallback(() => {
