@@ -116,7 +116,42 @@ export const configSchema = {
     },
     _default: [],
   },
+  formVisitTypeRestrictions: {
+    _type: Type.Array,
+    _description:
+      'Restricts forms to specific visit types. Each entry names a form (by name or UUID) and the visit types it may be filled in on. ' +
+      'While the patient has an active visit, a listed form is only offered if the visit type of that visit is one of its "visitTypes". ' +
+      'Forms that are not listed are offered on every visit type. When there is no active visit, all forms are offered as before. ' +
+      'If the same form is listed more than once, the visit types of all its entries are combined.',
+    _elements: {
+      _type: Type.Object,
+      form: {
+        _type: Type.String,
+        _description: 'Name or UUID of the form to restrict',
+        _validators: [
+          validator(
+            (v: unknown) => typeof v === 'string' && v.trim() !== '',
+            'Each restricted form must be specified by name or UUID.',
+          ),
+        ],
+      },
+      visitTypes: {
+        _type: Type.Array,
+        _elements: {
+          _type: Type.UUID,
+        },
+        _description: 'UUIDs of the visit types on which this form is offered',
+        _default: [],
+      },
+    },
+    _default: [],
+  },
 };
+
+export interface FormVisitTypeRestriction {
+  form: string;
+  visitTypes: Array<string>;
+}
 
 export interface FormsSection {
   name: string;
@@ -126,6 +161,7 @@ export interface FormsSection {
 export interface FormEntryConfigSchema {
   htmlFormEntryForms: Array<HtmlFormEntryForm>;
   formSections: Array<FormsSection>;
+  formVisitTypeRestrictions: Array<FormVisitTypeRestriction>;
   customFormsUrl: string;
   orderBy: 'name' | 'most-recent';
   showHtmlFormEntryForms: boolean;

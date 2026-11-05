@@ -8,7 +8,7 @@ import {
   userHasAccess,
   useSession,
 } from '@openmrs/esm-framework';
-import type { FormEntryConfigSchema } from '../config-schema';
+import type { FormEntryConfigSchema, FormVisitTypeRestriction } from '../config-schema';
 import type { ListResponse, Form, EncounterWithFormRef, CompletedFormInfo } from '../types';
 import {
   customEncounterRepresentation,
@@ -61,13 +61,40 @@ export function useEncountersWithFormRef(
 // December 31, 1969; hopefully we don't have encounters before that
 const MINIMUM_DATE = new Date(0);
 
+/**
+ * Returns whether a form may be offered on a visit of the given visit type, according to the
+ * `formVisitTypeRestrictions` config. A form that is not listed there is always allowed, and so is every
+ * form when there is no visit type (no active visit).
+ */
+export function isFormAllowedForVisitType(
+  form: Pick<Form, 'uuid' | 'name'>,
+  visitTypeUuid: string | undefined,
+  restrictions: Array<FormVisitTypeRestriction> = [],
+) {
+  if (!visitTypeUuid) {
+    return true;
+  }
+
+  const restrictionsForForm = restrictions.filter(
+    (restriction) => restriction.form === form?.uuid || restriction.form === form?.name,
+  );
+
+  if (restrictionsForForm.length === 0) {
+    return true;
+  }
+
+  return restrictionsForForm.some((restriction) => restriction.visitTypes?.includes(visitTypeUuid));
+}
+
 export function useForms(
   patientUuid: string,
   visitUuid?: string,
   startDate?: Date,
   endDate?: Date,
   orderBy: 'name' | 'most-recent' = 'name',
+  visitTypeUuid?: string,
 ) {
+  const { formVisitTypeRestrictions } = useConfig<FormEntryConfigSchema>();
   const allFormsRes = useFormEncounters(patientUuid, visitUuid);
   const encountersRes = useEncountersWithFormRef(patientUuid, startDate, endDate);
   const pastEncounters = encountersRes.data?.data?.results ?? [];
@@ -83,6 +110,12 @@ export function useForms(
   if (session?.user) {
     formsToDisplay = formsToDisplay?.filter((formInfo) =>
       userHasAccess(formInfo?.form?.encounterType?.editPrivilege?.display, session.user),
+    );
+  }
+
+  if (formVisitTypeRestrictions?.length) {
+    formsToDisplay = formsToDisplay?.filter((formInfo) =>
+      isFormAllowedForVisitType(formInfo.form, visitTypeUuid, formVisitTypeRestrictions),
     );
   }
 
