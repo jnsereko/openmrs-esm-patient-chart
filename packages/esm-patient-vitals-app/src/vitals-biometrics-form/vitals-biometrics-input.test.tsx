@@ -182,6 +182,34 @@ describe('VitalsAndBiometricsInput', () => {
     expect(abnormalValueFlag).toBeInTheDocument();
     expect(abnormalValueFlag).toHaveClass('critically-high');
   });
+
+  it('shows the normal range of each field under the input', () => {
+    renderVitalsBiometricsInput({
+      fieldProperties: [
+        { id: 'systolicBloodPressure', name: 'systolic', separator: '/', type: 'number' },
+        { id: 'diastolicBloodPressure', name: 'diastolic', type: 'number' },
+      ],
+      label: 'Blood pressure',
+      normalRanges: [
+        getReferenceRangesForConcept('5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', overridenMetadata),
+        { lowNormal: 60, hiNormal: null },
+      ],
+      unitSymbol: 'mmHg',
+    });
+
+    expect(screen.getByText('Normal: 100–140 / ≥ 60')).toBeInTheDocument();
+  });
+
+  it('shows no normal range when the concept has none', () => {
+    renderVitalsBiometricsInput({
+      fieldProperties: [{ id: 'weight', name: 'Weight', type: 'number' }],
+      label: 'Weight',
+      normalRanges: [{ lowNormal: null, hiNormal: null }],
+      unitSymbol: 'kg',
+    });
+
+    expect(screen.queryByText(/normal:/i)).not.toBeInTheDocument();
+  });
 });
 
 function renderVitalsBiometricsInput(props = {}) {

@@ -393,6 +393,7 @@ const VitalsAndBiometricsForm: React.FC<
                       ? isValueWithinReferenceRange(conceptRanges, config.concepts['temperatureUuid'], temperature)
                       : true
                   }
+                  normalRanges={[getReferenceRangesForConcept(config.concepts.temperatureUuid, conceptRanges)]}
                   showErrorMessage={showErrorMessage}
                   label={t('temperature', 'Temperature')}
                   unitSymbol={conceptUnits.get(config.concepts.temperatureUuid) ?? ''}
@@ -442,6 +443,10 @@ const VitalsAndBiometricsForm: React.FC<
                         )
                       : true
                   }
+                  normalRanges={[
+                    getReferenceRangesForConcept(config.concepts.systolicBloodPressureUuid, conceptRanges),
+                    getReferenceRangesForConcept(config.concepts.diastolicBloodPressureUuid, conceptRanges),
+                  ]}
                   showErrorMessage={showErrorMessage}
                   label={t('bloodPressure', 'Blood pressure')}
                   unitSymbol={conceptUnits.get(config.concepts.systolicBloodPressureUuid) ?? ''}
@@ -470,6 +475,7 @@ const VitalsAndBiometricsForm: React.FC<
                       : true
                   }
                   label={t('heartRate', 'Heart rate')}
+                  normalRanges={[getReferenceRangesForConcept(config.concepts.pulseUuid, conceptRanges)]}
                   showErrorMessage={showErrorMessage}
                   unitSymbol={conceptUnits.get(config.concepts.pulseUuid) ?? ''}
                 />
@@ -503,6 +509,7 @@ const VitalsAndBiometricsForm: React.FC<
                         )
                       : true
                   }
+                  normalRanges={[getReferenceRangesForConcept(config.concepts.respiratoryRateUuid, conceptRanges)]}
                   showErrorMessage={showErrorMessage}
                   label={t('respirationRate', 'Respiration rate')}
                   unitSymbol={conceptUnits.get(config.concepts.respiratoryRateUuid) ?? ''}
@@ -537,6 +544,7 @@ const VitalsAndBiometricsForm: React.FC<
                         )
                       : true
                   }
+                  normalRanges={[getReferenceRangesForConcept(config.concepts.oxygenSaturationUuid, conceptRanges)]}
                   showErrorMessage={showErrorMessage}
                   label={t('spo2', 'SpO2')}
                   unitSymbol={conceptUnits.get(config.concepts.oxygenSaturationUuid) ?? ''}
