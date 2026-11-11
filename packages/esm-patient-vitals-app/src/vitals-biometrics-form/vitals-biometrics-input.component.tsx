@@ -224,7 +224,13 @@ const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
           {Boolean(unitSymbol) && <p className={styles.unitName}>{unitSymbol}</p>}
         </section>
         {normalRange ? (
-          <p className={styles.normalRange}>{t('normalRangeHint', 'Normal: {{range}}', { range: normalRange })}</p>
+          <p className={styles.normalRange}>
+            {t('normalRangeHint', 'Normal: {{range}}', {
+              range: normalRange,
+              // The range is built from numbers here; escaping would turn its " / " into "&#x2F;" (UVL-EMR #564)
+              interpolation: { escapeValue: false },
+            })}
+          </p>
         ) : null}
       </div>
 
