@@ -66,16 +66,15 @@ const FormsTable = ({ tableHeaders, tableRows, isTablet, handleSearch, handleFor
                 </TableHead>
                 <TableBody>
                   {rows.map((row, i) => (
-                    <TableRow {...getRowProps({ row })}>
+                    <TableRow
+                      {...getRowProps({ row })}
+                      className={styles.formRow}
+                      onClick={() => {
+                        handleFormOpen(tableRows[i].form, null);
+                      }}
+                    >
                       <TableCell key={row.cells[0].id}>
-                        <Link
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => {
-                            handleFormOpen(tableRows[i].form, null);
-                          }}
-                          role="presentation"
-                          className={styles.formName}
-                        >
+                        <Link style={{ cursor: 'pointer' }} role="presentation" className={styles.formName}>
                           {tableRows[i]?.formName}
                         </Link>
                       </TableCell>

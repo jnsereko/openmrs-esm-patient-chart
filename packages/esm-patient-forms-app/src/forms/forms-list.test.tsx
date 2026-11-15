@@ -55,6 +55,25 @@ it('renders a list of forms fetched from the server', async () => {
   expect(screen.getByRole('row', { name: /laboratory tests never/i })).toBeInTheDocument();
 });
 
+it('opens a form when anywhere on its row is clicked', async () => {
+  const user = userEvent.setup();
+  const handleFormOpen = vi.fn();
+
+  renderFormsList({ forms: forms.map((form) => ({ form, associatedEncounters: [] })), handleFormOpen });
+
+  const row = screen.getByRole('row', { name: /surgical operation never/i });
+  await user.click(within(row).getByText(/never/i));
+
+  expect(handleFormOpen).toHaveBeenCalledTimes(1);
+  expect(handleFormOpen).toHaveBeenCalledWith(expect.objectContaining({ name: 'Surgical Operation' }), null);
+
+  handleFormOpen.mockClear();
+  await user.click(within(row).getByText(/surgical operation/i));
+
+  expect(handleFormOpen).toHaveBeenCalledTimes(1);
+  expect(handleFormOpen).toHaveBeenCalledWith(expect.objectContaining({ name: 'Surgical Operation' }), null);
+});
+
 const forms = [
   {
     uuid: '4077b82a-6d5b-4fc6-abb9-8bc6846600f0',
