@@ -193,7 +193,7 @@ export function deleteVisitAttribute(visitUuid: string, visitAttributeUuid: stri
 
 export function useVisitFormSchemaAndDefaultValues(visitToEdit: Visit, earliestAllowedStartDate?: Date | null) {
   const { t } = useTranslation();
-  const { visitAttributeTypes, restrictByVisitLocationTag } = useConfig<ChartConfig>();
+  const { visitAttributeTypes, preselectVisitLocation, restrictByVisitLocationTag } = useConfig<ChartConfig>();
   const isEmrApiModuleInstalled = useFeatureFlag('emrapi-module');
   const sessionUser = useSession();
   const sessionLocation = sessionUser?.sessionLocation;
@@ -228,7 +228,7 @@ export function useVisitFormSchemaAndDefaultValues(visitToEdit: Visit, earliestA
       visitStopTime: stopDateTime.time,
       visitStopTimeFormat: stopDateTime.timeFormat,
       visitType: visitToEdit?.visitType?.uuid ?? emrConfiguration?.atFacilityVisitType?.uuid,
-      visitLocation: visitToEdit?.location ?? defaultVisitLocation ?? {},
+      visitLocation: visitToEdit?.location ?? (preselectVisitLocation ? defaultVisitLocation : null) ?? {},
       visitAttributes:
         visitToEdit?.attributes.reduce(
           (acc, curr) => ({
@@ -360,7 +360,15 @@ export function useVisitFormSchemaAndDefaultValues(visitToEdit: Visit, earliestA
       });
 
     return { visitFormSchema, defaultValues, firstEncounterDateTime, lastEncounterDateTime };
-  }, [t, visitAttributeTypes, visitToEdit, defaultVisitLocation, emrConfiguration, earliestAllowedStartDate]);
+  }, [
+    t,
+    visitAttributeTypes,
+    visitToEdit,
+    defaultVisitLocation,
+    preselectVisitLocation,
+    emrConfiguration,
+    earliestAllowedStartDate,
+  ]);
 }
 
 // Returns a Date object based on date, time and am/pm inputs from user.

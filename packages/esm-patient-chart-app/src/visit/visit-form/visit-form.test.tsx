@@ -496,6 +496,54 @@ describe('Visit form', () => {
     });
   });
 
+  it('preselects the default visit location when preselectVisitLocation is true', () => {
+    renderVisitForm();
+
+    expect(screen.getByRole('combobox', { name: /select a location/i })).toHaveValue('Outpatient Clinic');
+  });
+
+  it('requires choosing a visit location when preselectVisitLocation is false', async () => {
+    const user = userEvent.setup();
+    mockUseConfig.mockReturnValue({
+      ...getDefaultsFromConfigSchema(esmPatientChartSchema),
+      preselectVisitLocation: false,
+    });
+
+    renderVisitForm();
+
+    const locationPicker = screen.getByRole('combobox', { name: /select a location/i });
+    expect(locationPicker).toHaveValue('');
+
+    await user.click(screen.getByLabelText(/Outpatient visit/i));
+    await user.click(screen.getByRole('button', { name: /start visit/i }));
+
+    expect(mockSaveVisit).not.toHaveBeenCalled();
+    expect(screen.getByText(/^required$/i)).toBeInTheDocument();
+
+    await user.click(locationPicker);
+    await user.click(screen.getByText('Inpatient Ward'));
+    await user.click(screen.getByRole('button', { name: /start visit/i }));
+
+    expect(mockSaveVisit).toHaveBeenCalledTimes(1);
+    expect(mockSaveVisit).toHaveBeenCalledWith(
+      expect.objectContaining({ location: mockLocations[1].uuid, visitType: 'some-uuid1' }),
+      expect.any(Object),
+    );
+  });
+
+  it('keeps the location of a visit being edited when preselectVisitLocation is false', () => {
+    mockUseConfig.mockReturnValue({
+      ...getDefaultsFromConfigSchema(esmPatientChartSchema),
+      preselectVisitLocation: false,
+    });
+
+    renderVisitForm(mockVisitWithAttributes);
+
+    expect(screen.getByRole('combobox', { name: /select a location/i })).toHaveValue(
+      mockVisitWithAttributes.location.display,
+    );
+  });
+
   it('calls the onVisitStarted workspace prop with the saved visit after closing the form', async () => {
     const user = userEvent.setup();
     const onVisitStarted = vi.fn();

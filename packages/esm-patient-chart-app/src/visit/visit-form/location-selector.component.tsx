@@ -59,10 +59,11 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ control }) => {
           <Controller
             control={control}
             name="visitLocation"
-            render={({ field: { onBlur, onChange, value } }) => (
+            render={({ field: { onBlur, onChange, value }, fieldState: { error } }) => (
               <ComboBox
                 aria-label={t('selectLocation', 'Select a location')}
                 id="location"
+                invalid={!!error}
                 invalidText={t('required', 'Required')}
                 items={locationsToShow}
                 itemToString={(location: Location) => location?.display}

@@ -71,6 +71,12 @@ export const esmPatientChartSchema = {
       'An array of concept UUIDs. If an observation has a concept UUID that matches any of the ones in this array, it will be hidden from the observations list in the Encounters summary table.',
     _default: [],
   },
+  preselectVisitLocation: {
+    _type: Type.Boolean,
+    _description:
+      'On the start visit form, whether to preselect the session location (with restrictByVisitLocationTag, its nearest Visit Location) as the visit location. When false, a new visit starts with no location and the user must choose one.',
+    _default: true,
+  },
   restrictByVisitLocationTag: {
     _type: Type.Boolean,
     _description:
@@ -210,6 +216,7 @@ export interface ChartConfig {
     src: string;
   };
   notesConceptUuids: string[];
+  preselectVisitLocation: boolean;
   restrictByVisitLocationTag: boolean;
   showAllEncountersTab: boolean;
   showRecommendedVisitTypeTab: boolean;
