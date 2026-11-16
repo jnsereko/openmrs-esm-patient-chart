@@ -416,6 +416,49 @@ test('attaches the visit from the visit context to a newly created note', async 
   );
 });
 
+test("files a new note at its visit's location rather than the session location (#691)", async () => {
+  const user = userEvent.setup();
+
+  mockSaveVisitNote.mockResolvedValueOnce({ status: 201, body: 'Visit note created' } as unknown as Awaited<
+    ReturnType<typeof saveVisitNote>
+  >);
+  mockFetchDiagnosisConceptsByName.mockResolvedValue(diagnosisSearchResponse.results);
+
+  renderVisitNotesForm(
+    {},
+    { visitContext: { uuid: 'visit-context-uuid', location: { uuid: 'opd-location-uuid' } } as Visit },
+  );
+
+  await addDiagnosis(user, 'Diabetes Mellitus', { primary: true });
+  await user.type(screen.getByRole('textbox', { name: /Write your notes/i }), 'Sample clinical note');
+  await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+  expect(mockSaveVisitNote).toHaveBeenCalledWith(
+    new AbortController(),
+    expect.objectContaining({ visit: 'visit-context-uuid', location: 'opd-location-uuid' }),
+  );
+});
+
+test('files a new note at the session location when its visit has no location (#691)', async () => {
+  const user = userEvent.setup();
+
+  mockSaveVisitNote.mockResolvedValueOnce({ status: 201, body: 'Visit note created' } as unknown as Awaited<
+    ReturnType<typeof saveVisitNote>
+  >);
+  mockFetchDiagnosisConceptsByName.mockResolvedValue(diagnosisSearchResponse.results);
+
+  renderVisitNotesForm({}, { visitContext: { uuid: 'visit-context-uuid' } as Visit });
+
+  await addDiagnosis(user, 'Diabetes Mellitus', { primary: true });
+  await user.type(screen.getByRole('textbox', { name: /Write your notes/i }), 'Sample clinical note');
+  await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+  expect(mockSaveVisitNote).toHaveBeenCalledWith(
+    new AbortController(),
+    expect.objectContaining({ location: mockSessionDataResponse.data.sessionLocation.uuid }),
+  );
+});
+
 test('omits the visit when there is no visit context', async () => {
   const user = userEvent.setup();
 
@@ -572,7 +615,6 @@ test('updates existing visit note when in edit mode', async () => {
     ],
     encounterType: ConfigMock.visitNoteConfig.encounterTypeUuid,
     form: ConfigMock.visitNoteConfig.formConceptUuid,
-    location: mockSessionDataResponse.data.sessionLocation.uuid,
     obs: [
       {
         concept: { display: '', uuid: '162169AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' },
@@ -609,6 +651,8 @@ test('updates existing visit note when in edit mode', async () => {
     mockEncounter.uuid,
     expect.objectContaining(updatePayload),
   );
+  // An edit leaves the note's location alone (#691)
+  expect(mockUpdateVisitNote.mock.calls[0][2]).not.toHaveProperty('location');
 });
 
 test('handles existing diagnoses correctly when in edit mode', async () => {

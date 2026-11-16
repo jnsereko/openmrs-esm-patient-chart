@@ -180,7 +180,7 @@ export interface VisitNotePayload {
   encounterDatetime: string; // date and time the encounter was created (ISO8601 Long) (REQUIRED)
   encounterType: string; // uuid of the encounter type - initial visit, return visit etc. (REQUIRED)
   patient: string; // the patient to whom the encounter applies
-  location: string; // the location at which the encounter occurred (REQUIRED)
+  location?: string; // the location at which the encounter occurred (required when creating; left out on edit)
   encounterProviders: Array<{ encounterRole: string; provider: string }>; // array of providers and their role within the encounter. At least 1 provider is required
   obs: Array<ObsPayload>; // array of observations and values for the encounter
   form: string; // target form uuid to be filled for the encounter

@@ -418,7 +418,10 @@ const VisitNotesForm: React.FC<VisitNotesFormProps> = ({
         encounterDatetime: finalNoteDate?.format(),
         form: formConceptUuid,
         patient: patientUuid,
-        location: locationUuid,
+        // A new note is filed at its visit's location (the service the patient is seen in), so that a
+        // visit's notes count under that service whatever location the user signed in at; without a
+        // visit location, at the session location. An edit leaves the note's location alone.
+        ...(!isEditing && { location: visitContext?.location?.uuid || locationUuid }),
         encounterProviders: [
           {
             encounterRole: clinicianEncounterRole,
@@ -589,6 +592,7 @@ const VisitNotesForm: React.FC<VisitNotesFormProps> = ({
       getValues,
       setValue,
       visitContext?.uuid,
+      visitContext?.location?.uuid,
       clinicianEncounterRole,
       closeWorkspace,
       encounter?.diagnoses,
