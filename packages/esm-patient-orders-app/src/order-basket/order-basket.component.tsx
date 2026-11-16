@@ -25,7 +25,6 @@ import {
   type OrderBasketExtensionProps,
   type OrderBasketItem,
   postOrders,
-  postOrdersOnNewEncounter,
   showOrderSuccessToast,
   useMutatePatientOrders,
   useOrderBasket,
@@ -33,6 +32,8 @@ import {
 import { type ConfigObject } from '../config-schema';
 import { getVisitDates, type Provider, useOrderEncounterForSystemWithVisitDisabled, useProviders } from '../api/api';
 import GeneralOrderPanel from './general-order-type/general-order-panel.component';
+// The basket's own copy, not the shared common-lib one: see post-order-encounter.ts
+import { postOrdersOnNewEncounter } from './post-order-encounter';
 import styles from './order-basket.scss';
 
 interface OrderBasketProps {

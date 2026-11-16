@@ -158,29 +158,4 @@ describe('postOrdersOnNewEncounter', () => {
     ).rejects.toThrow('not-a-date');
     expect(openmrsFetch).not.toHaveBeenCalled();
   });
-
-  it('records the orderer as the provider of the encounter, in the given encounter role', async () => {
-    seedBasket([{ action: 'NEW' }]);
-
-    await postOrdersOnNewEncounter(
-      patientUuid,
-      encounterType,
-      openVisit,
-      locationUuid,
-      ordererUuid,
-      undefined,
-      'clinician-role-uuid',
-    );
-    const body = vi.mocked(openmrsFetch).mock.calls[0][1].body as EncounterPost;
-
-    expect(body.encounterProviders).toEqual([{ provider: ordererUuid, encounterRole: 'clinician-role-uuid' }]);
-  });
-
-  it('creates the encounter without a provider when no encounter role is given', async () => {
-    seedBasket([{ action: 'NEW' }]);
-
-    const body = await postAndCaptureEncounter(openVisit);
-
-    expect(body).not.toHaveProperty('encounterProviders');
-  });
 });

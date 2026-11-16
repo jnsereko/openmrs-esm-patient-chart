@@ -67,7 +67,6 @@ export async function postOrdersOnNewEncounter(
   orderLocationUuid: string,
   ordererUuid: string,
   abortController?: AbortController,
-  ordererEncounterRoleUuid?: string,
 ) {
   const orders = getOrdersPayloadFromOrderBasket(patientUuid, ordererUuid);
 
@@ -122,10 +121,6 @@ export async function postOrdersOnNewEncounter(
     // to now (EncounterResource.newDelegate() stamps the request-time server clock).
     ...(encounterDatetime ? { encounterDatetime } : {}),
     visit: currentVisit?.uuid,
-    // The orderer is the encounter's provider, so the encounter does not read "No provider"
-    ...(ordererUuid && ordererEncounterRoleUuid
-      ? { encounterProviders: [{ provider: ordererUuid, encounterRole: ordererEncounterRoleUuid }] }
-      : {}),
     obs: [],
     orders,
   };
@@ -144,7 +139,6 @@ export interface EncounterPost {
   encounterType: string;
   encounterDatetime?: Date;
   visit?: string;
-  encounterProviders?: Array<{ provider: string; encounterRole: string }>;
   obs: ObsPayload[];
   orders: OrderPost[];
 }

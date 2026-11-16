@@ -3,7 +3,8 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { type LayoutType, useSession, useConfig, useLayoutType } from '@openmrs/esm-framework';
-import { useOrderBasket, useMutatePatientOrders, postOrdersOnNewEncounter } from '@openmrs/esm-patient-common-lib';
+import { useOrderBasket, useMutatePatientOrders } from '@openmrs/esm-patient-common-lib';
+import { postOrdersOnNewEncounter } from './post-order-encounter';
 import { mockSessionDataResponse } from '__mocks__';
 import { getVisitDates, useOrderEncounterForSystemWithVisitDisabled, useProviders } from '../api/api';
 import OrderBasket from './order-basket.component';
@@ -22,6 +23,9 @@ vi.mock('@openmrs/esm-patient-common-lib', async () => ({
   ...((await vi.importActual('@openmrs/esm-patient-common-lib')) as object),
   useOrderBasket: vi.fn(),
   useMutatePatientOrders: vi.fn(),
+}));
+
+vi.mock('./post-order-encounter', () => ({
   postOrdersOnNewEncounter: vi.fn(),
 }));
 
