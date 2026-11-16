@@ -1,9 +1,17 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { launchWorkspaceGroup2, usePatient, useVisit, type Visit } from '@openmrs/esm-framework';
-import { setPatientChartWorkspaceGroupVisitUuid, usePatientChartStore } from '@openmrs/esm-patient-common-lib';
+import { launchWorkspaceGroup2, openmrsFetch, usePatient, useVisit, type Visit } from '@openmrs/esm-framework';
+import {
+  invalidateVisits,
+  setPatientChartWorkspaceGroupVisitUuid,
+  usePatientChartStore,
+} from '@openmrs/esm-patient-common-lib';
 import { mockFhirPatient } from '__mocks__';
-import { usePatientChartPatientAndVisit } from './patient-chart.resources';
+import {
+  openVisitContextRefreshIntervalMs,
+  usePatientChartPatientAndVisit,
+  visitContextRefreshInterval,
+} from './patient-chart.resources';
 
 // TODO: remove once openmrs-esm-core ships launchWorkspaceGroup2 in the framework mock
 vi.mock('@openmrs/esm-framework', async () => {
@@ -12,6 +20,7 @@ vi.mock('@openmrs/esm-framework', async () => {
 });
 
 vi.mock('@openmrs/esm-patient-common-lib', () => ({
+  invalidateVisits: vi.fn(),
   setPatientChartWorkspaceGroupVisitUuid: vi.fn(),
   usePatientChartStore: vi.fn(),
 }));
@@ -20,6 +29,7 @@ const mockLaunchWorkspaceGroup = vi.mocked(launchWorkspaceGroup2);
 const mockUsePatient = vi.mocked(usePatient);
 const mockUseVisit = vi.mocked(useVisit);
 const mockUsePatientChartStore = vi.mocked(usePatientChartStore);
+const mockOpenmrsFetch = vi.mocked(openmrsFetch);
 
 const mutateVisitContext = vi.fn();
 const setPatient = vi.fn();
@@ -295,5 +305,84 @@ describe('usePatientChartPatientAndVisit', () => {
       'patient-chart',
       expect.objectContaining({ visitContext: visitB }),
     );
+  });
+});
+
+describe('visitContextRefreshInterval', () => {
+  it('polls an open visit and stops once the visit has ended', () => {
+    expect(visitContextRefreshInterval({ data: { ...visitA, stopDatetime: null } })).toBe(
+      openVisitContextRefreshIntervalMs,
+    );
+    expect(visitContextRefreshInterval({ data: { ...visitA, stopDatetime: '2026-11-15T23:59:59.000+0200' } })).toBe(0);
+    // not fetched yet: SWR schedules the next fetch from this value only
+    expect(visitContextRefreshInterval(undefined)).toBe(openVisitContextRefreshIntervalMs);
+  });
+});
+
+describe('usePatientChartPatientAndVisit when the visit in context is ended elsewhere', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLaunchWorkspaceGroup.mockResolvedValue(true);
+    mockUsePatient.mockReturnValue({
+      isLoading: false,
+      patient: mockFhirPatient,
+      patientUuid: mockFhirPatient.id,
+      error: null,
+    });
+    mockUseVisit.mockReturnValue({
+      activeVisit: null,
+      mutate: vi.fn(),
+      isValidating: false,
+      error: null,
+      currentVisit: null,
+      currentVisitIsRetrospective: false,
+      isLoading: false,
+    });
+  });
+
+  it('fetches the visit again and puts the ended visit in context, without relaunching the workspace group', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const openVisit = { ...visitA, startDatetime: '2026-11-15T08:00:00.000+0200', stopDatetime: null };
+      const endedVisit = { ...openVisit, stopDatetime: '2026-11-15T23:59:59.000+0200' };
+      mockUsePatientChartStore.mockReturnValue({
+        patientUuid: mockFhirPatient.id,
+        patient: mockFhirPatient,
+        visitContext: openVisit,
+        mutateVisitContext: null,
+        setPatient,
+        setVisitContext,
+      });
+      let serverVisit: Visit = openVisit;
+      mockOpenmrsFetch.mockImplementation(async () => ({ data: serverVisit }) as any);
+
+      renderHook(() => usePatientChartPatientAndVisit(mockFhirPatient.id));
+
+      await waitFor(() =>
+        expect(setVisitContext).toHaveBeenCalledWith(
+          expect.objectContaining({ stopDatetime: null }),
+          expect.anything(),
+        ),
+      );
+      expect(mockLaunchWorkspaceGroup).toHaveBeenCalledTimes(1);
+      expect(invalidateVisits).not.toHaveBeenCalled();
+
+      // the visit is ended elsewhere (another tab, another user, the nightly visit closing)
+      serverVisit = endedVisit;
+      await vi.advanceTimersByTimeAsync(openVisitContextRefreshIntervalMs + 1000);
+
+      await waitFor(() =>
+        expect(setVisitContext).toHaveBeenLastCalledWith(
+          expect.objectContaining({ uuid: visitA.uuid, stopDatetime: endedVisit.stopDatetime }),
+          expect.anything(),
+        ),
+      );
+      // same visit: the open workspaces (forms, order basket) are not closed
+      expect(mockLaunchWorkspaceGroup).toHaveBeenCalledTimes(1);
+      // and the patient's active visit is looked up again (patient banner, visit lists)
+      expect(invalidateVisits).toHaveBeenCalledWith(expect.any(Function), mockFhirPatient.id);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import {
   launchWorkspaceGroup2,
   openmrsFetch,
@@ -11,6 +11,7 @@ import {
   type Visit,
 } from '@openmrs/esm-framework';
 import {
+  invalidateVisits,
   type PatientWorkspaceGroupProps,
   setPatientChartWorkspaceGroupVisitUuid,
   usePatientChartStore,
@@ -45,9 +46,24 @@ function workspaceGroupLaunchKeysEqual(a: WorkspaceGroupLaunchKey | null, b: Wor
   return a?.patientUuid === b?.patientUuid && a?.visitContextUuid === b?.visitContextUuid;
 }
 
+/** How often the visit in context is fetched again while it is open. */
+export const openVisitContextRefreshIntervalMs = 60_000;
+
+/**
+ * A visit can be ended while the chart is open: by another user, in another tab, or by a scheduled
+ * task that closes the day's visits. Fetching an open visit again regularly lets the chart show it as
+ * ended instead of "Current active visit". An ended visit is not polled.
+ */
+export function visitContextRefreshInterval(latestData: { data: Visit } | undefined): number {
+  // SWR only schedules the next fetch from this value, so it must not be 0 before the first fetch
+  return latestData?.data?.stopDatetime ? 0 : openVisitContextRefreshIntervalMs;
+}
+
 export function useVisitByUuid(visitUuid: string | null, representation: string = defaultVisitCustomRepresentation) {
   const url = `${restBaseUrl}/visit/${visitUuid}?v=${representation}`;
-  const { data, ...rest } = useSWR<{ data: Visit }>(visitUuid ? url : null, openmrsFetch);
+  const { data, ...rest } = useSWR<{ data: Visit }>(visitUuid ? url : null, openmrsFetch, {
+    refreshInterval: visitContextRefreshInterval,
+  });
   return { visit: data?.data, ...rest };
 }
 
@@ -92,6 +108,21 @@ export function usePatientChartPatientAndVisit(patientUuid: string) {
     isValidating: isValidatingActiveVisit,
     mutate: mutateActiveVisit,
   } = useVisit(isVisitContextValid ? null : patientUuid);
+
+  // When the visit in context is found ended, the patient's other visit data (the active visit, the
+  // visit lists) is refreshed too, so nothing on the page still shows the visit as active.
+  const { mutate } = useSWRConfig();
+  const lastFetchedVisitContext = useRef<Visit | null>(null);
+  useEffect(() => {
+    if (!newVisitContext) {
+      return;
+    }
+    const previous = lastFetchedVisitContext.current;
+    lastFetchedVisitContext.current = newVisitContext;
+    if (previous?.uuid === newVisitContext.uuid && !previous.stopDatetime && newVisitContext.stopDatetime) {
+      invalidateVisits(mutate, patientUuid);
+    }
+  }, [newVisitContext, mutate, patientUuid]);
 
   const launchedWorkspaceGroupKey = useRef<WorkspaceGroupLaunchKey | null>(null);
   const launchedWorkspaceGroupProps = useRef<PatientWorkspaceGroupProps | null>(null);
