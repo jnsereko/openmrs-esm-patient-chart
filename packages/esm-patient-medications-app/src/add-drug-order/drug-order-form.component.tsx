@@ -191,7 +191,7 @@ export function DrugOrderForm({
 
   const {
     control,
-    formState: { isDirty, isSubmitting },
+    formState: { errors, isDirty, isSubmitting, submitCount },
     getValues,
     handleSubmit,
     setError,
@@ -370,6 +370,15 @@ export function DrugOrderForm({
       console.error('Error in drug order form', errors);
     }
   };
+
+  // The field errors render under each input, which can be off-screen in a long form. After a save attempt, list
+  // them again next to the save button so the clinician sees why nothing was saved.
+  const submissionErrorMessages =
+    submitCount > 0
+      ? Object.values(errors)
+          .map((error) => error?.message)
+          .filter((message): message is string => typeof message === 'string' && message.length > 0)
+      : [];
 
   const drugDosingUnits: Array<DosingUnit> = useMemo(
     () =>
@@ -855,6 +864,16 @@ export function DrugOrderForm({
               hideCloseButton
             />
           )}
+          {submissionErrorMessages.length > 0 && (
+            <InlineNotification
+              kind="error"
+              lowContrast
+              className={styles.inlineNotification}
+              title={t('drugOrderFormHasErrors', 'The order was not saved. Complete the required fields:')}
+              subtitle={submissionErrorMessages.join(' · ')}
+              hideCloseButton
+            />
+          )}
           <ButtonSet className={styles.buttonSet}>
             <Button kind="secondary" onClick={onCancel} size="xl">
               {t('discard', 'Discard')}
@@ -889,6 +908,7 @@ const CustomNumberInput = ({ setValue, control, name, labelText, isTablet, ...in
 
   const {
     field: { onBlur, onChange, value, ref },
+    fieldState: { error },
   } = useController<MedicationOrderFormData>({ name, control });
 
   const handleChange = useCallback(
@@ -932,6 +952,7 @@ const CustomNumberInput = ({ setValue, control, name, labelText, isTablet, ...in
           <AddIcon size={16} />
         </IconButton>
       </div>
+      {error?.message && <FormLabel className={styles.errorLabel}>{error.message}</FormLabel>}
     </div>
   );
 };

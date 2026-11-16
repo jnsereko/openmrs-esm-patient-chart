@@ -286,7 +286,7 @@ export function getTemplateOrderBasketItem(
             }
           : null,
         pillsDispensed: null,
-        numRefills: null,
+        numRefills: 0,
         freeTextDosage: '',
         indication: '',
         template: template.template,
@@ -325,7 +325,7 @@ export function getTemplateOrderBasketItem(
             }
           : null,
         pillsDispensed: null,
-        numRefills: null,
+        numRefills: 0,
         freeTextDosage: '',
         indication: '',
         quantityUnits: drug?.dosageForm

@@ -870,8 +870,8 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
 
     expect(
-      await screen.findByText('Revisions to an active medication must start today or earlier.'),
-    ).toBeInTheDocument();
+      (await screen.findAllByText('Revisions to an active medication must start today or earlier.')).length,
+    ).toBeGreaterThan(0);
     expect(onSave).not.toHaveBeenCalled();
   });
 
@@ -936,8 +936,45 @@ describe('DrugOrderForm - required field validation', () => {
     expect(screen.getByText('Frequency is required')).toBeInTheDocument();
     expect(screen.getByText('Indication is required')).toBeInTheDocument();
     expect(screen.getByText('Quantity to dispense is required')).toBeInTheDocument();
-    expect(screen.getByText('Number of refills is required')).toBeInTheDocument();
+    expect(screen.queryByText(/number of refills is required/i)).not.toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('defaults prescription refills to 0 so a new order can be saved without typing it', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const { numRefills, ...fieldsWithoutRefills } = completeMedicationOrderFields;
+    renderDrugOrderForm(createNewOrderBasketItem(fieldsWithoutRefills), onSave);
+
+    expect(screen.getByRole('spinbutton', { name: /prescription refills/i })).toHaveValue(0);
+
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0]).toMatchObject({ numRefills: 0 });
+  });
+
+  it('lists the missing required fields next to the save button after a failed save', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    renderDrugOrderForm(createNewOrderBasketItem({ ...completeMedicationOrderFields, indication: '' }), onSave);
+
+    expect(screen.queryByText(/the order was not saved/i)).not.toBeInTheDocument();
+
+    await user.clear(screen.getByRole('spinbutton', { name: /prescription refills/i }));
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+
+    expect(await screen.findByText(/the order was not saved/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (content) => content.includes('Number of refills is required') && content.includes('Indication is required'),
+      ),
+    ).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+
+    await user.type(screen.getByRole('spinbutton', { name: /prescription refills/i }), '0');
+    await user.type(screen.getByPlaceholderText(/e\.g\. "Hypertension"/i), 'Pain');
+
+    await waitFor(() => expect(screen.queryByText(/the order was not saved/i)).not.toBeInTheDocument());
   });
 });
 

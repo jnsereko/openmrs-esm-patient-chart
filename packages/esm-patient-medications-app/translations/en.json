@@ -29,6 +29,7 @@
   "drugAlreadyPrescribedNotificationBody": "An active or scheduled order already exists for this drug",
   "drugName": "Drug name",
   "drugOrders": "Drug orders",
+  "drugOrderFormHasErrors": "The order was not saved. Complete the required fields:",
   "drugRequiredErrorMessage": "Drug is required",
   "drugs": "Drugs",
   "duration": "Duration",
