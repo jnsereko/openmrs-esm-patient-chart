@@ -42,6 +42,19 @@ export function isValueWithinReferenceRange(
     : true;
 }
 
+/**
+ * True when `value` has decimals and its concept takes whole numbers only (`allowDecimal` false), the
+ * value OpenMRS would refuse with `Obs.error.precision`. A concept whose `allowDecimal` is unknown
+ * takes any number.
+ */
+export function isDecimalNotAllowed(
+  conceptAllowDecimal: Map<string, boolean> | undefined,
+  conceptUuid: string,
+  value: unknown,
+) {
+  return typeof value === 'number' && !Number.isInteger(value) && conceptAllowDecimal?.get(conceptUuid) === false;
+}
+
 // Convert age into an integer (whole number)
 export function extractNumbers(str: string) {
   const regex = /\d+/g;

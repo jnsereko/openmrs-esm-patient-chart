@@ -17,6 +17,7 @@ import {
   assessValue,
   createOrUpdateVitalsAndBiometrics,
   getReferenceRangesForConcept,
+  useConceptUnits,
   useEncounterVitalsAndBiometrics,
 } from '../common';
 import { type ConfigObject, configSchema } from '../config-schema';
@@ -361,6 +362,43 @@ describe('VitalsBiometricsForm', () => {
 
     vi.mocked(assessValue).mockReset();
     vi.mocked(getReferenceRangesForConcept).mockReset();
+  });
+
+  it('refuses a decimal in a field whose concept takes whole numbers, and names the field', async () => {
+    const user = userEvent.setup();
+    const defaultUseConceptUnits = vi.mocked(useConceptUnits).getMockImplementation();
+    vi.mocked(useConceptUnits).mockReturnValue({
+      conceptUnits: mockConceptUnits,
+      conceptAllowDecimal: new Map([
+        [mockVitalsConfig.concepts.pulseUuid, false],
+        [mockVitalsConfig.concepts.temperatureUuid, true],
+      ]),
+      error: null,
+      isLoading: false,
+    });
+
+    renderVitalsAndBiometricsForm();
+
+    await user.type(screen.getByRole('spinbutton', { name: /temperature/i }), '37.5');
+    expect(screen.queryByText(/enter a whole number/i)).not.toBeInTheDocument();
+
+    await user.type(screen.getByRole('spinbutton', { name: /pulse/i }), '72.5');
+    expect(screen.getByText('Enter a whole number, without decimals')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /save and close/i }));
+
+    expect(mockCreateOrUpdateVitalsAndBiometrics).not.toHaveBeenCalled();
+    expect(screen.getByText('Whole numbers only, without decimals: Heart rate')).toBeInTheDocument();
+
+    const pulse = screen.getByRole('spinbutton', { name: /pulse/i });
+    await user.clear(pulse);
+    await user.type(pulse, '72');
+    expect(screen.queryByText(/enter a whole number/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /save and close/i }));
+
+    expect(mockCreateOrUpdateVitalsAndBiometrics).toHaveBeenCalledTimes(1);
+    vi.mocked(useConceptUnits).mockImplementation(defaultUseConceptUnits);
   });
 
   it('saves a new encounter in the visit in context, by the logged-in provider', async () => {

@@ -70,6 +70,8 @@ export interface ConceptMetadata {
   lowAbsolute: number | null;
   lowCritical: number | null;
   units: string | null;
+  /** False for a numeric concept that takes whole numbers only; OpenMRS then refuses a decimal value. */
+  allowDecimal?: boolean | null;
 }
 
 interface VitalsConceptMetadataResponse {
@@ -148,7 +150,7 @@ export function useConceptUnits() {
   const { concepts } = useConfig<ConfigObject>();
   const vitalSignsConceptSetUuid = concepts.vitalSignsConceptSetUuid;
 
-  const customRepresentation = 'custom:(setMembers:(uuid,display,units))';
+  const customRepresentation = 'custom:(setMembers:(uuid,display,units,allowDecimal))';
 
   const apiUrl = `${restBaseUrl}/concept/${vitalSignsConceptSetUuid}?v=${customRepresentation}`;
 
@@ -163,8 +165,20 @@ export function useConceptUnits() {
     ? new Map<string, string>(conceptMetadata.map((concept) => [concept.uuid, concept.units]))
     : new Map<string, string>([]);
 
+  // Whether each numeric vital takes decimals, as the concept says (`allowDecimal`); non-numeric members have none.
+  const conceptAllowDecimal = useMemo(
+    () =>
+      new Map<string, boolean>(
+        (conceptMetadata ?? [])
+          .filter((concept) => typeof concept.allowDecimal === 'boolean')
+          .map((concept) => [concept.uuid, concept.allowDecimal]),
+      ),
+    [conceptMetadata],
+  );
+
   return {
     conceptUnits,
+    conceptAllowDecimal,
     error,
     isLoading,
   };

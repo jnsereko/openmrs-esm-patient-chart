@@ -41,6 +41,7 @@ import {
   calculateBodyMassIndex,
   extractNumbers,
   getMuacColorCode,
+  isDecimalNotAllowed,
   isValueWithinReferenceRange,
 } from './vitals-biometrics-form.utils';
 import {
@@ -89,7 +90,7 @@ const VitalsAndBiometricsForm: React.FC<
   const useMuacColorStatus = config.vitals.useMuacColors;
 
   const session = useSession();
-  const { conceptUnits, isLoading: isLoadingConceptUnits } = useConceptUnits();
+  const { conceptUnits, conceptAllowDecimal, isLoading: isLoadingConceptUnits } = useConceptUnits();
   const { conceptRanges, conceptRangeMap } = useVitalsConceptMetadata(patientUuid);
   const {
     getRefinedInitialValues,
@@ -98,6 +99,7 @@ const VitalsAndBiometricsForm: React.FC<
     vitalsAndBiometrics: initialFieldValuesMap,
   } = useEncounterVitalsAndBiometrics(formContext === 'editing' ? editEncounterUuid : null);
   const [hasInvalidVitals, setHasInvalidVitals] = useState(false);
+  const [fieldsRefusingDecimals, setFieldsRefusingDecimals] = useState<Array<string>>([]);
   const [muacColorCode, setMuacColorCode] = useState('');
   const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -179,6 +181,28 @@ const VitalsAndBiometricsForm: React.FC<
     }
   }
 
+  // A field whose concept takes whole numbers only (allowDecimal false) refuses a decimal here, naming
+  // the field, rather than letting the server reject the whole encounter with Obs.error.precision.
+  const decimalNotAllowed = useCallback(
+    (key: string, value: unknown) => isDecimalNotAllowed(conceptAllowDecimal, config.concepts[`${key}Uuid`], value),
+    [conceptAllowDecimal, config.concepts],
+  );
+
+  const fieldLabels = useMemo(
+    () => ({
+      temperature: t('temperature', 'Temperature'),
+      systolicBloodPressure: t('bloodPressure', 'Blood pressure'),
+      diastolicBloodPressure: t('bloodPressure', 'Blood pressure'),
+      pulse: t('heartRate', 'Heart rate'),
+      respiratoryRate: t('respirationRate', 'Respiration rate'),
+      oxygenSaturation: t('spo2', 'SpO2'),
+      weight: t('weight', 'Weight'),
+      height: t('height', 'Height'),
+      midUpperArmCircumference: t('muac', 'MUAC'),
+    }),
+    [t],
+  );
+
   const concepts = useMemo(
     () => ({
       midUpperArmCircumferenceRange: conceptRangeMap.get(config.concepts.midUpperArmCircumferenceUuid),
@@ -199,6 +223,14 @@ const VitalsAndBiometricsForm: React.FC<
       const formData = data;
       setShowErrorMessage(true);
       setShowErrorNotification(false);
+
+      const fieldsWithDecimals = Object.entries(formData)
+        .filter(([key, value]) => decimalNotAllowed(key, value))
+        .map(([key]) => key);
+      setFieldsRefusingDecimals(fieldsWithDecimals);
+      if (fieldsWithDecimals.length > 0) {
+        return;
+      }
 
       const computedBodyMassIndex = data?.computedBodyMassIndex;
       if (data?.computedBodyMassIndex) {
@@ -290,6 +322,7 @@ const VitalsAndBiometricsForm: React.FC<
       config.concepts,
       config.vitals.clinicianEncounterRole,
       config.vitals.encounterTypeUuid,
+      decimalNotAllowed,
       dirtyFields,
       editEncounterUuid,
       conceptRanges,
@@ -371,6 +404,7 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={decimalNotAllowed('temperature', temperature)}
                   fieldProperties={[
                     {
                       id: 'temperature',
@@ -402,6 +436,10 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={
+                    decimalNotAllowed('systolicBloodPressure', systolicBloodPressure) ||
+                    decimalNotAllowed('diastolicBloodPressure', diastolicBloodPressure)
+                  }
                   fieldProperties={[
                     {
                       name: t('systolic', 'systolic'),
@@ -455,6 +493,7 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={decimalNotAllowed('pulse', pulse)}
                   fieldProperties={[
                     {
                       name: t('pulse', 'Pulse'),
@@ -483,6 +522,7 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={decimalNotAllowed('respiratoryRate', respiratoryRate)}
                   fieldProperties={[
                     {
                       name: t('respirationRate', 'Respiration rate'),
@@ -518,6 +558,7 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={decimalNotAllowed('oxygenSaturation', oxygenSaturation)}
                   fieldProperties={[
                     {
                       name: t('oxygenSaturation', 'Oxygen saturation'),
@@ -578,6 +619,7 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={decimalNotAllowed('weight', weight)}
                   fieldProperties={[
                     {
                       name: t('weight', 'Weight'),
@@ -605,6 +647,7 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={decimalNotAllowed('height', height)}
                   fieldProperties={[
                     {
                       name: t('height', 'Height'),
@@ -649,6 +692,7 @@ const VitalsAndBiometricsForm: React.FC<
               <Column>
                 <VitalsAndBiometricsInput
                   control={control}
+                  decimalNotAllowed={decimalNotAllowed('midUpperArmCircumference', midUpperArmCircumference)}
                   fieldProperties={[
                     {
                       name: t('muac', 'MUAC'),
@@ -685,6 +729,21 @@ const VitalsAndBiometricsForm: React.FC<
               title={t('error', 'Error')}
               subtitle={t('pleaseFillField', 'Please fill at least one field') + '.'}
               onClose={() => setShowErrorNotification(false)}
+            />
+          </Column>
+        )}
+
+        {fieldsRefusingDecimals.length > 0 && (
+          <Column className={styles.errorContainer}>
+            <InlineNotification
+              className={styles.errorNotification}
+              lowContrast={false}
+              onClose={() => setFieldsRefusingDecimals([])}
+              title={t('vitalsAndBiometricsSaveError', 'Error saving Vitals and Biometrics')}
+              subtitle={t('decimalsNotAllowed', 'Whole numbers only, without decimals: {{fields}}', {
+                fields: [...new Set(fieldsRefusingDecimals.map((key) => fieldLabels[key] ?? key))].join(', '),
+                interpolation: { escapeValue: false },
+              })}
             />
           </Column>
         )}

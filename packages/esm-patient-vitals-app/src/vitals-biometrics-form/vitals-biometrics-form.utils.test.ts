@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getMuacColorCode } from './vitals-biometrics-form.utils';
+import { getMuacColorCode, isDecimalNotAllowed } from './vitals-biometrics-form.utils';
 
 describe('getMuacColorCode', () => {
   it.each([
@@ -29,5 +29,28 @@ describe('getMuacColorCode', () => {
       result = color;
     });
     expect(result).toBe(expectedColor);
+  });
+});
+
+describe('isDecimalNotAllowed', () => {
+  const allowDecimal = new Map([
+    ['pulse-uuid', false],
+    ['temperature-uuid', true],
+  ]);
+
+  it('refuses a decimal for a concept that takes whole numbers only', () => {
+    expect(isDecimalNotAllowed(allowDecimal, 'pulse-uuid', 72.5)).toBe(true);
+  });
+
+  it('accepts a whole number, a decimal where the concept allows it, and a concept it knows nothing of', () => {
+    expect(isDecimalNotAllowed(allowDecimal, 'pulse-uuid', 72)).toBe(false);
+    expect(isDecimalNotAllowed(allowDecimal, 'temperature-uuid', 37.5)).toBe(false);
+    expect(isDecimalNotAllowed(allowDecimal, 'unknown-uuid', 37.5)).toBe(false);
+    expect(isDecimalNotAllowed(undefined, 'pulse-uuid', 72.5)).toBe(false);
+  });
+
+  it('ignores empty and text values', () => {
+    expect(isDecimalNotAllowed(allowDecimal, 'pulse-uuid', undefined)).toBe(false);
+    expect(isDecimalNotAllowed(allowDecimal, 'pulse-uuid', 'a note')).toBe(false);
   });
 });

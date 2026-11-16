@@ -41,6 +41,8 @@ function formatNormalRange(range?: NormalRange | null) {
 
 interface VitalsAndBiometricsInputProps {
   control: Control<VitalsBiometricsFormData>;
+  /** A value has decimals but its concept takes whole numbers only; shown at once, and saving is refused. */
+  decimalNotAllowed?: boolean;
   fieldStyles?: React.CSSProperties;
   fieldWidth?: string;
   fieldProperties: Array<{
@@ -68,6 +70,7 @@ interface VitalsAndBiometricsInputProps {
 
 const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
   control,
+  decimalNotAllowed = false,
   fieldProperties,
   fieldStyles,
   fieldWidth,
@@ -109,7 +112,7 @@ const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
     : null;
 
   const isInvalidInput = !isValueWithinReferenceRange || invalid;
-  const showInvalidInputError = Boolean(showErrorMessage && isInvalidInput);
+  const showInvalidInputError = Boolean(showErrorMessage && isInvalidInput) || decimalNotAllowed;
   const errorMessageClass = showInvalidInputError ? styles.invalidInput : '';
 
   const containerClasses = classNames(styles.container, {
@@ -234,13 +237,19 @@ const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
         ) : null}
       </div>
 
-      {showInvalidInputError && (
+      {decimalNotAllowed ? (
         <FormLabel className={styles.invalidInputError}>
-          {t('validationInputError', `Value must be between {{min}} and {{max}}`, {
-            min: fieldProperties[0].min,
-            max: fieldProperties[0].max,
-          })}
+          {t('wholeNumberRequired', 'Enter a whole number, without decimals')}
         </FormLabel>
+      ) : (
+        showInvalidInputError && (
+          <FormLabel className={styles.invalidInputError}>
+            {t('validationInputError', `Value must be between {{min}} and {{max}}`, {
+              min: fieldProperties[0].min,
+              max: fieldProperties[0].max,
+            })}
+          </FormLabel>
+        )
       )}
     </>
   );

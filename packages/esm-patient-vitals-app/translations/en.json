@@ -17,6 +17,7 @@
   "dateAndTime": "Date and time",
   "daysOldVitals_one": "<0>These vitals are <1>{{count}} day old</1></0>",
   "daysOldVitals_other": "<0>These vitals are <1>{{count}} days old</1></0>",
+  "decimalsNotAllowed": "Whole numbers only, without decimals: {{fields}}",
   "delete": "Delete",
   "deleteConfirmationText": "Note: Deleting these entries will also remove related vitals or biometrics data. Are you sure you want to continue?",
   "deleteVitalsAndBiometrics": "Delete vitals and biometrics",
@@ -78,5 +79,6 @@
   "vitalsHistory": "Vitals history",
   "vitalSignDisplayed": "Vital sign displayed",
   "vitalSigns": "vital signs",
-  "weight": "Weight"
+  "weight": "Weight",
+  "wholeNumberRequired": "Enter a whole number, without decimals"
 }
