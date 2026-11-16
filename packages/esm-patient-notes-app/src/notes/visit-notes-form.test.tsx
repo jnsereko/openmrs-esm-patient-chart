@@ -439,6 +439,31 @@ test("files a new note at its visit's location rather than the session location 
   );
 });
 
+// common-lib here is the actual, unpatched 13.0.2-pre.12863 copy (vi.importActual above; this branch
+// changes nothing in it), as at runtime where the shared common-lib may be another app's copy (#683).
+// The visit's location reaches the form through its stock getPatientAndVisitProps.
+test("files a new note at its visit's location when the visit comes as a deprecated workspace prop (#691)", async () => {
+  const user = userEvent.setup();
+
+  mockSaveVisitNote.mockResolvedValueOnce({ status: 201, body: 'Visit note created' } as unknown as Awaited<
+    ReturnType<typeof saveVisitNote>
+  >);
+  mockFetchDiagnosisConceptsByName.mockResolvedValue(diagnosisSearchResponse.results);
+
+  renderVisitNotesFormWithDeprecatedWorkspaceProps({
+    visitContext: { uuid: 'visit-context-uuid', location: { uuid: 'opd-location-uuid' } } as Visit,
+  });
+
+  await addDiagnosis(user, 'Diabetes Mellitus', { primary: true });
+  await user.type(screen.getByRole('textbox', { name: /Write your notes/i }), 'Sample clinical note');
+  await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+  expect(mockSaveVisitNote).toHaveBeenCalledWith(
+    new AbortController(),
+    expect.objectContaining({ visit: 'visit-context-uuid', location: 'opd-location-uuid' }),
+  );
+});
+
 test('files a new note at the session location when its visit has no location (#691)', async () => {
   const user = userEvent.setup();
 
