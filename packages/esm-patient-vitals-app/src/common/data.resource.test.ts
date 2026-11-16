@@ -73,6 +73,51 @@ describe('createOrUpdateVitalsAndBiometrics', () => {
     });
   });
 
+  it("files a new encounter at its visit's location rather than the session location", async () => {
+    await createOrUpdateVitalsAndBiometrics(
+      'patient-uuid',
+      'vitals-type',
+      null,
+      'maternity',
+      obs,
+      new AbortController(),
+      {
+        visit: { ...openVisit, location: { uuid: 'opd' } },
+        providerUuid: 'provider-uuid',
+        encounterRoleUuid: 'clinician-role',
+      },
+    );
+    expect(lastBody().location).toBe('opd');
+
+    await createOrUpdateVitalsAndBiometrics(
+      'patient-uuid',
+      'vitals-type',
+      null,
+      'maternity',
+      obs,
+      new AbortController(),
+      {
+        visit: { ...openVisit, location: null },
+        providerUuid: 'provider-uuid',
+        encounterRoleUuid: 'clinician-role',
+      },
+    );
+    expect(lastBody().location).toBe('maternity');
+  });
+
+  it('leaves the location of an edited encounter alone', async () => {
+    await createOrUpdateVitalsAndBiometrics(
+      'patient-uuid',
+      'vitals-type',
+      'encounter-uuid',
+      'maternity',
+      obs,
+      new AbortController(),
+      { visit: { ...openVisit, location: { uuid: 'opd' } } },
+    );
+    expect(lastBody()).not.toHaveProperty('location');
+  });
+
   it('dates a new encounter in a closed visit inside that visit', async () => {
     await createOrUpdateVitalsAndBiometrics('patient-uuid', 'vitals-type', null, 'opd', obs, new AbortController(), {
       visit: closedVisit,

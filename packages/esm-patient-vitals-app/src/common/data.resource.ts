@@ -530,7 +530,7 @@ function mapVitalsAndBiometrics(resource: FHIRObservationResource): MappedVitals
  * What a new vitals encounter is attached to: the visit it belongs to and who recorded it.
  */
 export interface NewVitalsEncounterContext {
-  visit?: Pick<Visit, 'uuid' | 'startDatetime' | 'stopDatetime'> | null;
+  visit?: (Pick<Visit, 'uuid' | 'startDatetime' | 'stopDatetime'> & { location?: { uuid?: string } | null }) | null;
   providerUuid?: string | null;
   encounterRoleUuid?: string | null;
 }
@@ -576,13 +576,17 @@ export function createOrUpdateVitalsAndBiometrics(
     obs: vitalsAndBiometricsObs,
   };
   if (!encounterUuid) {
-    encounter['location'] = location;
+    const { visit, providerUuid, encounterRoleUuid } = newEncounterContext ?? {};
+
+    // A new encounter is filed at its visit's location (the service the patient is seen in), so that
+    // a visit's vitals count under that service whatever location the user signed in at. Without a
+    // visit, or a visit without a location, it falls back to `location` (the session location).
+    encounter['location'] = visit?.location?.uuid || location;
     encounter['encounterType'] = encounterTypeUuid;
 
     // Attach the new encounter to the visit it was recorded in, rather than leaving the server to guess
     // one from the session location and the current time (which misses visits started at another
     // location and past visits). An edit leaves the encounter's visit, datetime and providers alone.
-    const { visit, providerUuid, encounterRoleUuid } = newEncounterContext ?? {};
     if (visit?.uuid) {
       encounter['visit'] = visit.uuid;
       const encounterDatetime = getVitalsEncounterDatetime(visit);
