@@ -1,4 +1,4 @@
-import { Type, validators } from '@openmrs/esm-framework';
+import { Type, validator, validators } from '@openmrs/esm-framework';
 
 export const accentColors = ['purple', 'cyan', 'teal', 'magenta', 'orange', 'red', 'green', 'gray'] as const;
 export type AccentColor = (typeof accentColors)[number];
@@ -74,6 +74,21 @@ export const configSchema = {
       'Array of provider roles uuids. If specified, the order basket shows the "Prescribing Clinician" dropdown listing all providers with one of the specified roles. (The dropdown is hidden if no providers match the role criteria.) This feature requires the providermanagement backend module. Note that, in any case, any user who can submit orders form may still do so with themselves as the prescriber.',
     _default: [],
   },
+  ordererEncounterRole: {
+    // a string rather than Type.UUID, so that it can be left empty
+    _type: Type.String,
+    _default: '240b26f9-dd88-4172-823d-4a8bfeb7841f',
+    _description:
+      'The UUID of the encounter role given to the orderer on the encounter the order basket creates (defaults to the Clinician role). Leave empty to create the encounter without a provider.',
+    _validators: [
+      validator(
+        (v: unknown) =>
+          v === '' ||
+          (typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)),
+        'Must be an encounter role UUID, or empty',
+      ),
+    ],
+  },
   orderLocationTagName: {
     _type: Type.UUID,
     _description:
@@ -109,6 +124,7 @@ export interface ConfigObject {
   showReferenceNumberField: boolean;
   enableAddTestsDuringResultEntry: boolean;
   ordererProviderRoles: Array<string>;
+  ordererEncounterRole: string;
   orderLocationTagName: string;
   enableDrugOrderFavorites: boolean;
   maxPinnedDrugOrders: number;

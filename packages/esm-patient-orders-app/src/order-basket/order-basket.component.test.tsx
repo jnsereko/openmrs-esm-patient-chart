@@ -55,6 +55,7 @@ const defaultMockConfig = {
   orderTypes: [],
   orderEncounterType: 'order-encounter-type',
   ordererProviderRoles: [],
+  ordererEncounterRole: 'clinician-role-uuid',
   orderLocationTagName: null,
 };
 
@@ -194,6 +195,22 @@ describe('OrderBasket', () => {
       expect(mockPostOrdersOnNewEncounter).toHaveBeenCalledTimes(1);
       expect(mockPostOrdersOnNewEncounter.mock.calls[0][2]).toBe(openVisit);
       expect(screen.queryByText('This visit has ended')).not.toBeInTheDocument();
+    });
+
+    it('records the signing clinician as the provider of the order encounter (#683)', async () => {
+      const user = userEvent.setup();
+      mockGetVisitDates.mockResolvedValue({
+        uuid: openVisit.uuid,
+        startDatetime: openVisit.startDatetime,
+        stopDatetime: null,
+      });
+      renderBasket();
+
+      await user.click(screen.getByRole('button', { name: /sign and close/i }));
+
+      const [, , , , ordererUuid, , encounterRoleUuid] = mockPostOrdersOnNewEncounter.mock.calls[0];
+      expect(ordererUuid).toBe(mockSessionDataResponse.data.currentProvider.uuid);
+      expect(encounterRoleUuid).toBe('clinician-role-uuid');
     });
   });
 });

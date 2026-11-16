@@ -56,7 +56,8 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
 }) => {
   const { t } = useTranslation();
   const isTablet = useLayoutType() === 'tablet';
-  const { orderTypes, orderEncounterType, ordererProviderRoles, orderLocationTagName } = useConfig<ConfigObject>();
+  const { orderTypes, orderEncounterType, ordererProviderRoles, ordererEncounterRole, orderLocationTagName } =
+    useConfig<ConfigObject>();
   const {
     currentProvider: _currentProvider,
     sessionLocation,
@@ -138,6 +139,7 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
           orderLocationUuid,
           orderer.uuid,
           abortController,
+          ordererEncounterRole,
         );
         await closeWorkspace({ discardUnsavedChanges: true });
         mutateEncounterUuid();
@@ -204,6 +206,7 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
     clearOrders,
     closeWorkspace,
     orderEncounterType,
+    ordererEncounterRole,
     orderEncounterUuid,
     mutateEncounterUuid,
     mutateOrders,
