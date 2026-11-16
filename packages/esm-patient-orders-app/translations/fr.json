@@ -145,5 +145,7 @@
   "unpinOrder": "Unpin order",
   "updated": "Updated",
   "usingADifferentTerm": "en utilisant un terme différent",
-  "view": "Afficher"
+  "view": "Afficher",
+  "visitEndedSignToSaveInIt": "La visite a été clôturée le {{stopDatetime}}. L'ordonnance est conservée : cliquez à nouveau sur « Signer et fermer » pour l'enregistrer dans cette visite.",
+  "visitHasEnded": "Cette visite est terminée"
 }

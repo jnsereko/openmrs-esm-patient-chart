@@ -6,7 +6,9 @@ import { useSWRConfig } from 'swr';
 import {
   Extension,
   ExtensionSlot,
+  formatDatetime,
   getPatientName,
+  parseDate,
   PatientBannerPatientInfo,
   PatientPhoto,
   LocationPicker,
@@ -29,7 +31,7 @@ import {
   useOrderBasket,
 } from '@openmrs/esm-patient-common-lib';
 import { type ConfigObject } from '../config-schema';
-import { type Provider, useOrderEncounterForSystemWithVisitDisabled, useProviders } from '../api/api';
+import { getVisitDates, type Provider, useOrderEncounterForSystemWithVisitDisabled, useProviders } from '../api/api';
 import GeneralOrderPanel from './general-order-type/general-order-panel.component';
 import styles from './order-basket.scss';
 
@@ -75,6 +77,8 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
   } = useOrderEncounterForSystemWithVisitDisabled(patientUuid);
   const [isSavingOrders, setIsSavingOrders] = useState(false);
   const [creatingEncounterError, setCreatingEncounterError] = useState('');
+  // The visit in context, as found when signing, if it had been ended since the basket was opened
+  const [endedVisitContext, setEndedVisitContext] = useState<Visit | null>(null);
   const { mutate: mutateOrders } = useMutatePatientOrders(patientUuid);
   const { mutate } = useSWRConfig();
 
@@ -109,11 +113,28 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
     // If orderEncounterUuid is not present, then create an encounter along with the orders.
     // If orderEncounterUuid is present, then just post the orders to that encounter.
     if (!orderEncounterUuid) {
+      // The visit may have been ended since the basket was opened. Posting into it as an open visit
+      // is then rejected (Encounter.datetimeShouldBeInVisitDatesRange), so check it first. If it has
+      // ended, say so and keep the basket; signing again saves the orders in that ended visit.
+      let visit = endedVisitContext ?? visitContext;
+      if (!endedVisitContext && visitContext?.uuid && !visitContext.stopDatetime) {
+        try {
+          const latestVisitDates = await getVisitDates(visitContext.uuid, abortController);
+          if (latestVisitDates?.stopDatetime) {
+            setEndedVisitContext({ ...visitContext, ...latestVisitDates });
+            setIsSavingOrders(false);
+            return;
+          }
+        } catch (e) {
+          // Could not check: save as before, and the save reports any error
+          console.error(e);
+        }
+      }
       try {
         const postedEncounter = await postOrdersOnNewEncounter(
           patientUuid,
           orderEncounterType,
-          visitContext,
+          visit,
           orderLocationUuid,
           orderer.uuid,
           abortController,
@@ -179,6 +200,7 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
     return () => abortController.abort();
   }, [
     visitContext,
+    endedVisitContext,
     clearOrders,
     closeWorkspace,
     orderEncounterType,
@@ -293,6 +315,20 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
               ))}
         </div>
         <div>
+          {endedVisitContext && (
+            <InlineNotification
+              kind="warning"
+              title={t('visitHasEnded', 'This visit has ended')}
+              subtitle={t(
+                'visitEndedSignToSaveInIt',
+                'The visit was ended on {{stopDatetime}}. The order basket is kept: sign again to save it in that visit.',
+                { stopDatetime: formatDatetime(parseDate(endedVisitContext.stopDatetime)) },
+              )}
+              lowContrast={true}
+              hideCloseButton
+              className={styles.inlineNotification}
+            />
+          )}
           {(creatingEncounterError || errorFetchingEncounterUuid) && (
             <InlineNotification
               kind="error"

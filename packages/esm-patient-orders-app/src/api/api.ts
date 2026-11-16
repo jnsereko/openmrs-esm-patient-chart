@@ -28,6 +28,19 @@ export function getMedicationByUuid(abortController: AbortController, orderUuid:
 }
 
 /**
+ * Fetches the start and stop datetimes of a visit as the server has them now. The visit a workspace
+ * was opened with can have been ended since (in another tab, by another user, or by a scheduled task
+ * that closes the day's visits).
+ */
+export async function getVisitDates(visitUuid: string, abortController?: AbortController) {
+  const { data } = await openmrsFetch<Pick<Visit, 'uuid' | 'startDatetime' | 'stopDatetime'>>(
+    `${restBaseUrl}/visit/${visitUuid}?v=custom:(uuid,startDatetime,stopDatetime)`,
+    { signal: abortController?.signal },
+  );
+  return data;
+}
+
+/**
  * If system does not have visit enabled, then fetches the first encounter for the patient on the current date with the configured order encounter type.
  * Else, returns undefined.
  * @returns
