@@ -61,6 +61,14 @@ describe('postOrdersOnNewEncounter', () => {
     vi.mocked(openmrsFetch).mockResolvedValue({ data: { uuid: 'new-encounter-uuid', orders: [] } } as never);
   });
 
+  it('files the encounter at the location the order basket passes, not one from the shared common-lib (#691)', async () => {
+    seedBasket([{ action: 'NEW' }]);
+
+    await postOrdersOnNewEncounter(patientUuid, encounterType, openVisit, 'visit-location-uuid', ordererUuid);
+
+    expect((vi.mocked(openmrsFetch).mock.calls[0][1].body as EncounterPost).location).toBe('visit-location-uuid');
+  });
+
   it('omits encounterDatetime and order dateActivated for a "start now" order in an open visit', async () => {
     seedBasket([{ action: 'NEW' }]);
 
