@@ -92,7 +92,7 @@ export const configSchema = {
   orderLocationTagName: {
     _type: Type.UUID,
     _description:
-      'The name of the ordering location tag. If specified, the order baskets shows the order locations dropdown listing locations with the specified tag. The dropdown is hidden if this config value is not specified, and the order location defaults to the login location of the user.',
+      'The name of the ordering location tag. If specified, the order baskets shows the order locations dropdown listing locations with the specified tag. The dropdown is hidden if this config value is not specified, and the order location defaults to the location of the visit, or the login location of the user when the visit has none.',
     _default: '',
   },
   enableDrugOrderFavorites: {

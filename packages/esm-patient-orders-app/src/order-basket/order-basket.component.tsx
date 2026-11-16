@@ -84,7 +84,11 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
   const { mutate: mutateOrders } = useMutatePatientOrders(patientUuid);
   const { mutate } = useSWRConfig();
 
-  const [orderLocationUuid, setOrderLocationUuid] = useState(sessionLocation.uuid);
+  // The order encounter is filed at the location chosen in the order location picker, else at the
+  // visit's location (the service the patient is seen in), so that a visit's orders count under that
+  // service whatever location the user signed in at. Without a visit location, the session location.
+  const [chosenOrderLocationUuid, setOrderLocationUuid] = useState<string | null>(null);
+  const orderLocationUuid = chosenOrderLocationUuid || visitContext?.location?.uuid || sessionLocation?.uuid;
 
   const allowSelectingOrderer = ordererProviderRoles?.length > 0;
   const {

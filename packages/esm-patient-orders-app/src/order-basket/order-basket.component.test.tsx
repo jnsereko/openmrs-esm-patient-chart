@@ -217,4 +217,44 @@ describe('OrderBasket', () => {
       expect(encounterRoleUuid).toBe('clinician-role-uuid');
     });
   });
+
+  describe('order encounter location (#691)', () => {
+    beforeEach(() => {
+      mockUseSession.mockReturnValue(mockSessionDataResponse.data as any);
+      mockUseOrderBasket.mockReturnValue({
+        orders: [{ display: 'Paracetamol', action: 'NEW', isOrderIncomplete: false }],
+        clearOrders: vi.fn(),
+        setOrders: vi.fn(),
+      } as any);
+      mockGetVisitDates.mockResolvedValue({ uuid: mockVisitContext.uuid, startDatetime: null, stopDatetime: null });
+      mockPostOrdersOnNewEncounter.mockResolvedValue({ uuid: 'encounter-uuid', orders: [] } as any);
+    });
+
+    async function signWithVisit(visitContext) {
+      const user = userEvent.setup();
+      render(
+        <OrderBasket
+          patientUuid={mockPatientUuid}
+          patient={mockPatient}
+          visitContext={visitContext}
+          closeWorkspace={mockCloseWorkspace}
+          orderBasketExtensionProps={mockOrderBasketExtensionProps}
+        />,
+      );
+      await user.click(screen.getByRole('button', { name: /sign and close/i }));
+      return mockPostOrdersOnNewEncounter.mock.calls[0][3];
+    }
+
+    it("files the orders at the visit's location rather than the session location", async () => {
+      const orderLocationUuid = await signWithVisit({ ...mockVisitContext, location: { uuid: 'opd-location-uuid' } });
+
+      expect(orderLocationUuid).toBe('opd-location-uuid');
+    });
+
+    it('falls back to the session location when the visit has no location', async () => {
+      const orderLocationUuid = await signWithVisit({ ...mockVisitContext, location: null });
+
+      expect(orderLocationUuid).toBe(mockSessionDataResponse.data.sessionLocation.uuid);
+    });
+  });
 });
