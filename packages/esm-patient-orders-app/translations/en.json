@@ -146,6 +146,6 @@
   "updated": "Updated",
   "usingADifferentTerm": "using a different term",
   "view": "View",
-  "visitEndedSignToSaveInIt": "The visit was ended on {{stopDatetime}}. The order basket is kept: sign again to save it in that visit.",
+  "visitEndedSignToSaveInIt": "The visit was ended on {{- stopDatetime}}. The order basket is kept: sign again to save it in that visit.",
   "visitHasEnded": "This visit has ended"
 }

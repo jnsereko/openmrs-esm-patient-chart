@@ -321,7 +321,7 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
               title={t('visitHasEnded', 'This visit has ended')}
               subtitle={t(
                 'visitEndedSignToSaveInIt',
-                'The visit was ended on {{stopDatetime}}. The order basket is kept: sign again to save it in that visit.',
+                'The visit was ended on {{- stopDatetime}}. The order basket is kept: sign again to save it in that visit.',
                 { stopDatetime: formatDatetime(parseDate(endedVisitContext.stopDatetime)) },
               )}
               lowContrast={true}
