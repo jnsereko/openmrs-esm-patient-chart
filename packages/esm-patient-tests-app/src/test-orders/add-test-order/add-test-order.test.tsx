@@ -53,11 +53,19 @@ vi.mock('./useTestTypes', () => ({
   useTestTypes: () => mockUseTestTypes(),
 }));
 
-vi.mock('@openmrs/esm-patient-common-lib', async () => ({
-  ...((await vi.importActual('@openmrs/esm-patient-common-lib')) as object),
-  useOrderType: vi.fn(),
-  usePatientOrders: vi.fn().mockReturnValue({ data: [], error: undefined, isLoading: false, isValidating: false }),
-}));
+vi.mock('@openmrs/esm-patient-common-lib', async () => {
+  // At runtime common-lib is shared with the other patient-chart apps, which may bring the published
+  // 13.0.2-pre.12863 copy: it has no getPriorityOptions (UVL-EMR#529). The app must not need it.
+  const { getPriorityOptions, ...actual } = (await vi.importActual('@openmrs/esm-patient-common-lib')) as Record<
+    string,
+    unknown
+  >;
+  return {
+    ...actual,
+    useOrderType: vi.fn(),
+    usePatientOrders: vi.fn().mockReturnValue({ data: [], error: undefined, isLoading: false, isValidating: false }),
+  };
+});
 
 function renderAddLabOrderWorkspace() {
   return render(

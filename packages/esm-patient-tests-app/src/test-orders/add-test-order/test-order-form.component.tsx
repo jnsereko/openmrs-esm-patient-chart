@@ -19,7 +19,6 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import {
   type OrderUrgency,
-  getPriorityOptions,
   useOrderBasket,
   useOrderType,
   type TestOrderBasketItem,
@@ -27,6 +26,7 @@ import {
   useMutatePatientOrders,
   showOrderSuccessToast,
 } from '@openmrs/esm-patient-common-lib';
+import { getPriorityOptions } from './priority-options';
 import {
   ExtensionSlot,
   OpenmrsDatePicker,
