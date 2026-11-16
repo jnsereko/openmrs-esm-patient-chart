@@ -102,5 +102,7 @@
   "valueMustBeAtLeast": "Value must be at least {{min}}",
   "valueMustBeAtMost": "Value must be at most {{max}}",
   "valueNotFoundInCodedAnswers": "Value not found in coded answers list",
-  "valuesOutOfBound": "Some of the values are out of bounds"
+  "valuesOutOfBound": "Some of the values are out of bounds",
+  "visitEndedSaveToSaveInIt": "The visit was ended on {{stopDatetime}}. The form is kept: save it again to save it in that visit.",
+  "visitHasEnded": "This visit has ended"
 }
