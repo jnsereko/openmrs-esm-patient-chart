@@ -2,8 +2,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { InlineLoading } from '@carbon/react';
 import { FormEngine } from '@openmrs/esm-form-engine-lib';
-import { showModal, type Visit, type Encounter } from '@openmrs/esm-framework';
+import { showModal, useConfig, type Visit, type Encounter } from '@openmrs/esm-framework';
 import { type FormRendererProps } from '@openmrs/esm-patient-common-lib';
+import { type ConfigObject } from '../config-schema';
 import FormError from './form-error.component';
 import useFormSchema from '../hooks/useFormSchema';
 import styles from './form-renderer.scss';
@@ -29,6 +30,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
   preFilledQuestions,
 }) => {
   const { t } = useTranslation();
+  const { sessionLocationEncounterTypes } = useConfig<ConfigObject>();
 
   const { schema, error, isLoading } = useFormSchema(formUuid);
   const formSessionIntent = additionalProps?.formSessionIntent ?? '*';
@@ -105,6 +107,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
           onSubmit={handleOnSubmit}
           patientUUID={patientUuid}
           preFilledQuestions={preFilledQuestions}
+          sessionLocationEncounterTypes={sessionLocationEncounterTypes}
           visit={visit}
         />
       )}

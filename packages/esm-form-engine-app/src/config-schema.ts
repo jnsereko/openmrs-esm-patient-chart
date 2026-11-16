@@ -7,6 +7,13 @@ export const configSchema = {
       'Controls whether empty fields are hidden in embedded readonly forms. When true, empty non-transient fields are hidden when forms are displayed in embedded-view mode (e.g., in the Visit dashboard Encounters widget).',
     _default: false,
   },
+  sessionLocationEncounterTypes: {
+    _type: Type.Array,
+    _elements: { _type: Type.UUID },
+    _description:
+      "Encounter types (uuids) whose new encounters are filed at the user's session location. Every other new encounter is filed at its visit's location, or at the session location when the visit has none. A form's own encounter location field always wins, and an edited encounter keeps its location.",
+    _default: [],
+  },
   phq9Concepts: {
     _type: Type.Object,
     _description: 'PHQ-9 concept UUIDs for score calculation',
@@ -21,6 +28,7 @@ export const configSchema = {
 
 export interface ConfigObject {
   hideUnansweredQuestionsInReadonlyForms: boolean;
+  sessionLocationEncounterTypes: Array<string>;
   phq9Concepts: {
     notAtAll: string;
     severalDays: string;

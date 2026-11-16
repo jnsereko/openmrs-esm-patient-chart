@@ -2,6 +2,8 @@ import React from 'react';
 import { vi, describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { mockPatient } from 'tools';
+import { useConfig } from '@openmrs/esm-framework';
+import { FormEngine } from '@openmrs/esm-form-engine-lib';
 import FormRenderer from './form-renderer.component';
 import useFormSchema from '../hooks/useFormSchema';
 
@@ -54,5 +56,18 @@ describe('FormRenderer', () => {
     render(<FormRenderer {...defaultProps} />);
     await expect(screen.getByText(/form engine lib/i)).toBeInTheDocument();
     expect(mockUseFormSchema).toHaveBeenCalledWith('test-form-uuid');
+  });
+
+  test('passes the encounter types kept at the session location on to the form engine (UVL-EMR #691)', () => {
+    vi.mocked(useConfig).mockReturnValue({ sessionLocationEncounterTypes: ['admission-type-uuid'] });
+    mockUseFormSchema.mockReturnValue({ schema: { uuid: 'test-schema' }, isLoading: false, error: null } as ReturnType<
+      typeof useFormSchema
+    >);
+
+    render(<FormRenderer {...defaultProps} />);
+
+    expect(vi.mocked(FormEngine).mock.lastCall[0]).toEqual(
+      expect.objectContaining({ sessionLocationEncounterTypes: ['admission-type-uuid'] }),
+    );
   });
 });
