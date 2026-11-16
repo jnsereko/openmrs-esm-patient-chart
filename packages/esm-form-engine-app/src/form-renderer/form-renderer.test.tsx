@@ -15,6 +15,10 @@ vi.mock('@openmrs/esm-form-engine-lib', () => ({
     .mockImplementation(() => React.createElement('div', { 'data-testid': 'openmrs form' }, 'FORM ENGINE LIB')),
 }));
 
+// At runtime the shared common-lib can be another app's copy (UVL-EMR #683): the form renderer needs
+// nothing from it but types, so every test here runs with it empty.
+vi.mock('@openmrs/esm-patient-common-lib', () => ({}));
+
 vi.mock('../hooks/useFormSchema', () => ({
   default: vi.fn(),
 }));
@@ -69,5 +73,16 @@ describe('FormRenderer', () => {
     expect(vi.mocked(FormEngine).mock.lastCall[0]).toEqual(
       expect.objectContaining({ sessionLocationEncounterTypes: ['admission-type-uuid'] }),
     );
+  });
+
+  test('hands the visit, with its location, to the form engine as given (UVL-EMR #691)', () => {
+    const visit = { uuid: 'visit-uuid', location: { uuid: 'opd-location-uuid' } };
+    mockUseFormSchema.mockReturnValue({ schema: { uuid: 'test-schema' }, isLoading: false, error: null } as ReturnType<
+      typeof useFormSchema
+    >);
+
+    render(<FormRenderer {...defaultProps} visit={visit as never} />);
+
+    expect(vi.mocked(FormEngine).mock.lastCall[0].visit).toBe(visit);
   });
 });
