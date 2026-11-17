@@ -91,11 +91,11 @@ test.describe('Modify and discontinue laboratory order tests sequentially', () =
 
     await test.step('Then I click on Add results action', async () => {
       await page.getByRole('menuitem', { name: 'Add results' }).click();
-      await expect(page.getByRole('spinbutton', { name: conceptName })).toBeVisible();
+      await expect(page.getByRole('textbox', { name: conceptName })).toBeVisible();
     });
 
     await test.step('Then I fill in the lab result and click save', async () => {
-      await page.getByRole('spinbutton', { name: conceptName }).fill('55');
+      await page.getByRole('textbox', { name: conceptName }).fill('55');
       await page.getByRole('button', { name: 'Save and close' }).click();
     });
 
