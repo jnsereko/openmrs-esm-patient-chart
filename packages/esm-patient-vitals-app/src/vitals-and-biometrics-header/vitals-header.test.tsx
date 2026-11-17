@@ -151,6 +151,41 @@ describe('VitalsHeader', () => {
     expect(getByTextWithMarkup(/these vitals are out of date/i)).toBeInTheDocument();
   });
 
+  it('shows the latest value of each vital, whichever encounter recorded it (UVL-EMR #761)', async () => {
+    mockUseVitalsAndBiometrics.mockReturnValue({
+      data: [
+        {
+          id: '1',
+          date: '2021-05-19T04:29:51.000Z',
+          temperature: 38,
+        },
+        {
+          id: '0',
+          date: '2021-05-19T04:26:51.000Z',
+          pulse: 76,
+          temperature: 37,
+          diastolic: 89,
+          systolic: 121,
+          weight: 70,
+          height: 175,
+          bmi: 22.9,
+          bloodPressureRenderInterpretation: 'normal',
+        },
+      ],
+    } as ReturnType<typeof useVitalsAndBiometrics>);
+
+    renderWithSwr(<VitalsHeader {...testProps} />);
+
+    await waitForLoadingToFinish();
+
+    expect(getByTextWithMarkup(/Temp\s*38\s*DEG C/i)).toBeInTheDocument();
+    expect(getByTextWithMarkup(/BP\s*121 \/ 89\s*mmHg/i)).toBeInTheDocument();
+    expect(getByTextWithMarkup(/Heart rate\s*76\s*beats\/min/i)).toBeInTheDocument();
+    expect(getByTextWithMarkup(/Weight\s*70\s*kg/i)).toBeInTheDocument();
+    expect(getByTextWithMarkup(/Height\s*175\s*cm/i)).toBeInTheDocument();
+    expect(getByTextWithMarkup(/BMI\s*22\.9/i)).toBeInTheDocument();
+  });
+
   it('writes decimals with a comma in a French session (UVL-EMR #723)', async () => {
     vi.mocked(getLocale).mockReturnValue('fr');
     mockUseVitalsAndBiometrics.mockReturnValue({

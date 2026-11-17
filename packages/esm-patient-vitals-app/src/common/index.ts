@@ -14,6 +14,7 @@ export {
   calculateBodyMassIndex,
   formatDecimal,
   generatePlaceholder,
+  getLatestVitalsAndBiometrics,
   getReferenceRangesForConcept,
   interpretBloodPressure,
 } from './helpers';

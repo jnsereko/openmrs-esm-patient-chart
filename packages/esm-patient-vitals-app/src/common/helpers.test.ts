@@ -1,6 +1,12 @@
-import { assessValue, formatDecimal, interpretBloodPressure, prepareObsForSubmission } from './helpers';
+import {
+  assessValue,
+  formatDecimal,
+  getLatestVitalsAndBiometrics,
+  interpretBloodPressure,
+  prepareObsForSubmission,
+} from './helpers';
 import { vi, describe, it, expect } from 'vitest';
-import type { ObsReferenceRanges } from './types';
+import type { ObsReferenceRanges, PatientVitalsAndBiometrics } from './types';
 import type { VitalsAndBiometricsFieldValuesMap } from './data.resource';
 
 const temperatureRange: ObsReferenceRanges = {
@@ -211,5 +217,79 @@ describe('prepareObsForSubmission', () => {
 
     expect(result.toBeVoided).toEqual([{ uuid: 'old-note-uuid', voided: true }]);
     expect(result.newObs).toEqual([]);
+  });
+});
+
+describe('getLatestVitalsAndBiometrics (UVL-EMR #761)', () => {
+  const temperatureOnly: PatientVitalsAndBiometrics = {
+    id: 'surveillance',
+    date: '2026-11-17T21:45:00.000Z',
+    temperature: 38.2,
+    temperatureRenderInterpretation: 'high',
+  };
+  const fullVitals: PatientVitalsAndBiometrics = {
+    id: 'vitals',
+    date: '2026-11-17T21:42:00.000Z',
+    systolic: 150,
+    diastolic: 95,
+    systolicRenderInterpretation: 'high',
+    diastolicRenderInterpretation: 'high',
+    bloodPressureRenderInterpretation: 'high',
+    pulse: 88,
+    pulseRenderInterpretation: 'normal',
+    temperature: 36.8,
+    weight: 70,
+    height: 175,
+    bmi: 22.9,
+  };
+
+  it('returns undefined when nothing has been recorded', () => {
+    expect(getLatestVitalsAndBiometrics(undefined)).toBeUndefined();
+    expect(getLatestVitalsAndBiometrics([])).toBeUndefined();
+  });
+
+  it('takes each value from the latest encounter that recorded it', () => {
+    const latest = getLatestVitalsAndBiometrics([temperatureOnly, fullVitals]);
+
+    expect(latest.id).toBe('surveillance');
+    expect(latest.date).toBe('2026-11-17T21:45:00.000Z');
+    expect(latest.temperature).toBe(38.2);
+    expect(latest.temperatureRenderInterpretation).toBe('high');
+    expect(latest.systolic).toBe(150);
+    expect(latest.diastolic).toBe(95);
+    expect(latest.bloodPressureRenderInterpretation).toBe('high');
+    expect(latest.pulse).toBe(88);
+    expect(latest.pulseRenderInterpretation).toBe('normal');
+    expect(latest.weight).toBe(70);
+    expect(latest.height).toBe(175);
+    expect(latest.bmi).toBe(22.9);
+    expect(latest.spo2).toBeUndefined();
+  });
+
+  it('does not depend on the order of the entries', () => {
+    expect(getLatestVitalsAndBiometrics([fullVitals, temperatureOnly])).toEqual(
+      getLatestVitalsAndBiometrics([temperatureOnly, fullVitals]),
+    );
+  });
+
+  it('keeps systolic and diastolic from the same encounter', () => {
+    const latest = getLatestVitalsAndBiometrics([
+      { id: 'new', date: '2026-11-17T22:00:00.000Z', systolic: 120 },
+      fullVitals,
+    ]);
+
+    expect(latest.systolic).toBe(120);
+    expect(latest.diastolic).toBeUndefined();
+  });
+
+  it('calculates BMI from the latest weight and height when they were recorded apart', () => {
+    const latest = getLatestVitalsAndBiometrics([
+      { id: 'weight', date: '2026-11-17T22:00:00.000Z', weight: 80, bmi: null },
+      fullVitals,
+    ]);
+
+    expect(latest.weight).toBe(80);
+    expect(latest.height).toBe(175);
+    expect(latest.bmi).toBe(26.1);
   });
 });

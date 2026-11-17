@@ -13,7 +13,7 @@ import { type ConfigObject } from '../config-schema';
 import { useLaunchVitalsAndBiometricsForm } from '../utils';
 import VitalsHeaderItem from './vitals-header-item.component';
 import styles from './vitals-header.scss';
-import { formatDecimal, shouldShowBmi } from '../common/helpers';
+import { formatDecimal, getLatestVitalsAndBiometrics, shouldShowBmi } from '../common/helpers';
 
 interface VitalsHeaderProps {
   patientUuid: string;
@@ -44,7 +44,8 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
   const { conceptUnits } = useConceptUnits();
   const { data: vitals, isLoading, isValidating } = useVitalsAndBiometrics(patientUuid, 'both');
   const { conceptRanges, conceptRangeMap } = useVitalsConceptMetadata(patientUuid);
-  const latestVitals = vitals?.[0];
+  // The latest value of each vital, not only those of the latest encounter (UVL-EMR #761)
+  const latestVitals = useMemo(() => getLatestVitalsAndBiometrics(vitals), [vitals]);
   const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   const toggleDetailsPanel = () => setShowDetailsPanel(!showDetailsPanel);
   const isActiveVisit = Boolean(visitContext && !visitContext.stopDatetime);

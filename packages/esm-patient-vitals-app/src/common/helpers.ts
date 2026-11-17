@@ -2,7 +2,12 @@ import dayjs from 'dayjs';
 import { getLocale, type OpenmrsResource } from '@openmrs/esm-framework';
 
 import { type ConceptMetadata } from '../common';
-import type { FHIRInterpretation, ObsReferenceRanges, ObservationInterpretation } from './types';
+import type {
+  FHIRInterpretation,
+  ObsReferenceRanges,
+  ObservationInterpretation,
+  PatientVitalsAndBiometrics,
+} from './types';
 import { type VitalsBiometricsFormData } from '../vitals-biometrics-form/schema';
 import { type VitalsAndBiometricsFieldValuesMap } from './data.resource';
 import { type BiometricsConfigObject } from '../config-schema';
@@ -38,6 +43,71 @@ export function calculateBodyMassIndex(weight: number, height: number) {
     return Number((weight / (height / 100) ** 2).toFixed(1));
   }
   return null;
+}
+
+/** The vitals and biometrics shown on their own, each with the interpretation recorded alongside it. */
+const singleVitalsKeys = ['pulse', 'temperature', 'spo2', 'respiratoryRate', 'height', 'weight', 'muac'] as const;
+
+/**
+ * The latest value of each vital and biometric, whichever encounter recorded it (UVL-EMR #761). `vitals` holds one
+ * entry per encounter, newest first, as `useVitalsAndBiometrics` returns them; a form that records only a temperature
+ * must not hide the blood pressure, pulse or weight taken a few minutes earlier in another encounter.
+ *
+ * Each value keeps the interpretation of the encounter that recorded it. Systolic and diastolic are taken together
+ * from the latest encounter that has a blood pressure. BMI is that of the encounter with the latest weight, or else
+ * is calculated from the latest weight and height. `date` is that of the most recent encounter.
+ */
+export function getLatestVitalsAndBiometrics(
+  vitals: Array<PatientVitalsAndBiometrics> | undefined,
+): PatientVitalsAndBiometrics | undefined {
+  if (!vitals?.length) {
+    return undefined;
+  }
+
+  const time = (entry: PatientVitalsAndBiometrics) => {
+    const value = new Date(entry.date).getTime();
+    return Number.isNaN(value) ? -Infinity : value;
+  };
+  // Array.prototype.sort is stable, so entries with the same date keep the order they came in
+  const newestFirst = [...vitals].sort((a, b) => time(b) - time(a));
+  const latestWith = (has: (entry: PatientVitalsAndBiometrics) => boolean) => newestFirst.find(has);
+
+  const latest: PatientVitalsAndBiometrics = {
+    id: newestFirst[0].id,
+    date: newestFirst[0].date,
+    note: newestFirst[0].note,
+  };
+
+  for (const key of singleVitalsKeys) {
+    const source = latestWith((entry) => entry[key] != null);
+    if (source) {
+      latest[key] = source[key];
+      latest[`${key}RenderInterpretation`] = source[`${key}RenderInterpretation`];
+    }
+  }
+
+  const bloodPressure = latestWith((entry) => entry.systolic != null || entry.diastolic != null);
+  if (bloodPressure) {
+    latest.systolic = bloodPressure.systolic;
+    latest.diastolic = bloodPressure.diastolic;
+    latest.systolicRenderInterpretation = bloodPressure.systolicRenderInterpretation;
+    latest.diastolicRenderInterpretation = bloodPressure.diastolicRenderInterpretation;
+    latest.bloodPressureRenderInterpretation = bloodPressure.bloodPressureRenderInterpretation;
+  }
+
+  const weighed = latestWith((entry) => entry.weight != null);
+  if (weighed?.bmi != null) {
+    latest.bmi = weighed.bmi;
+    latest.bmiRenderInterpretation = weighed.bmiRenderInterpretation;
+  } else if (weighed) {
+    latest.bmi = calculateBodyMassIndex(Number(latest.weight), Number(latest.height));
+  } else {
+    const withBmi = latestWith((entry) => entry.bmi != null);
+    latest.bmi = withBmi?.bmi ?? null;
+    latest.bmiRenderInterpretation = withBmi?.bmiRenderInterpretation;
+  }
+
+  return latest;
 }
 
 export function assessValue(value: number | undefined, range?: ObsReferenceRanges): ObservationInterpretation {
