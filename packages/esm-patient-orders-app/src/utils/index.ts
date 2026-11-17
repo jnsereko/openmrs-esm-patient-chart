@@ -10,6 +10,7 @@ import {
 } from '@openmrs/esm-patient-common-lib';
 import { type Observation, type ObservationValue } from '../types/encounter';
 import { type LabOrderConcept } from '../lab-results/lab-results.resource';
+import { formatDecimal } from './format-decimal';
 
 /**
  * Enables a comparison of arbitrary values with support for undefined/null.
@@ -268,6 +269,8 @@ export function interpretObservation(obs: Observation, ranges: ReferenceRanges):
   const interpretation = obsInterpretation ?? (!isNaN(numericValue) ? assessValue(numericValue, ranges) : 'NORMAL');
   const units = ranges.units ?? '';
   const valueIsNumeric = typeof obs.value === 'number';
-  const valueWithUnits = valueIsNumeric && units ? `${displayValue} ${units}` : displayValue;
+  // A number in the session's decimal mark: « 4,5 % » in French (UVL-EMR #752)
+  const shownValue = valueIsNumeric ? String(formatDecimal(displayValue)) : displayValue;
+  const valueWithUnits = valueIsNumeric && units ? `${shownValue} ${units}` : shownValue;
   return { displayValue: valueWithUnits, interpretation };
 }

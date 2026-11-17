@@ -4,6 +4,7 @@ import { InlineLoading, Toggletip, ToggletipButton, ToggletipContent } from '@ca
 import { useTranslation } from 'react-i18next';
 import { formatDate, UserIcon } from '@openmrs/esm-framework';
 import { type Order, useDrugOrderByUuid } from '@openmrs/esm-patient-common-lib';
+import { formatDecimal } from '../utils/format-decimal';
 import styles from './medication-record.scss';
 
 interface MedicationRecordProps {
@@ -37,7 +38,7 @@ export default function MedicationRecord({ medication }: MedicationRecordProps) 
             <>
               <span className={styles.label01}>{t('dose', 'Dose').toUpperCase()}</span>{' '}
               <span className={styles.dosage}>
-                {order.dose} {order.doseUnits?.display?.toLowerCase()}
+                {formatDecimal(order.dose)} {order.doseUnits?.display?.toLowerCase()}
               </span>{' '}
             </>
           )}
@@ -52,7 +53,7 @@ export default function MedicationRecord({ medication }: MedicationRecordProps) 
             <>
               {(order.dose != null || order.route?.display || order.frequency?.display) && <> &mdash; </>}
               {t('medicationDurationAndUnit', 'for {{duration}} {{durationUnit}}', {
-                duration: order.duration,
+                duration: formatDecimal(order.duration),
                 durationUnit: order.durationUnits?.display?.toLowerCase(),
               })}
             </>
@@ -86,8 +87,8 @@ export default function MedicationRecord({ medication }: MedicationRecordProps) 
           {order.orderReasonNonCoded && order.quantity != null ? <> &mdash;</> : null}
           {order.quantity != null ? (
             <span>
-              <span className={styles.label01}> {t('quantity', 'Quantity').toUpperCase()}</span> {order.quantity}{' '}
-              {order.quantityUnits?.display}
+              <span className={styles.label01}> {t('quantity', 'Quantity').toUpperCase()}</span>{' '}
+              {formatDecimal(order.quantity)} {order.quantityUnits?.display}
             </span>
           ) : null}
           {order.dateStopped ? (

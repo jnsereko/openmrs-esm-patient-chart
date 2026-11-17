@@ -1,6 +1,7 @@
 import type { Order } from '@openmrs/esm-patient-common-lib';
-import { describe, it, expect } from 'vitest';
-import { buildMedicationOrder } from './index';
+import { describe, it, expect, vi } from 'vitest';
+import { getLocale } from '@openmrs/esm-framework';
+import { buildMedicationOrder, interpretObservation } from './index';
 
 const medicationOrder = {
   uuid: 'order-uuid',
@@ -148,5 +149,26 @@ describe('buildMedicationOrder', () => {
     const result = buildMedicationOrder(medicationOrder, 'REVISE');
 
     expect(result.previousOrderDateActivated).toBe(medicationOrder.dateActivated);
+  });
+});
+
+describe('interpretObservation', () => {
+  const obs = (value: unknown) => ({ uuid: 'obs-uuid', value }) as any;
+
+  it("writes a numeric result with the session language's decimal mark, before its units (UVL-EMR #752)", () => {
+    vi.mocked(getLocale).mockReturnValue('fr');
+    expect(interpretObservation(obs(95.4), { units: 'mg/dl' }).displayValue).toBe('95,4 mg/dl');
+    expect(interpretObservation(obs(4.5), { units: '%' }).displayValue).toBe('4,5 %');
+    expect(interpretObservation(obs(140), { units: 'mmol/L' }).displayValue).toBe('140 mmol/L');
+
+    vi.mocked(getLocale).mockReturnValue('en');
+    expect(interpretObservation(obs(95.4), { units: 'mg/dl' }).displayValue).toBe('95.4 mg/dl');
+  });
+
+  it('still judges the value by the number, and leaves a coded or text result alone', () => {
+    vi.mocked(getLocale).mockReturnValue('fr');
+    expect(interpretObservation(obs(12.5), { hiNormal: 10, units: 'g/dL' }).interpretation).toBe('HIGH');
+    expect(interpretObservation(obs({ uuid: 'positive', display: 'Positif' }), {}).displayValue).toBe('Positif');
+    expect(interpretObservation(obs('1.5 x 10^9'), {}).displayValue).toBe('1.5 x 10^9');
   });
 });
