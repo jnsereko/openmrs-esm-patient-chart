@@ -51,6 +51,7 @@ import {
 import { buildMedicationOrder } from '../api';
 import { type AddDrugOrderWorkspaceProps } from '../add-drug-order/add-drug-order.workspace';
 import { type ConfigObject } from '../config-schema';
+import { formatDecimal } from './format-decimal';
 import PrintComponent from '../print/print.component';
 import styles from './medications-details-table.scss';
 
@@ -131,7 +132,7 @@ const MedicationsDetailsTable: React.FC<MedicationsDetailsTableProps> = ({
                 <>
                   <span className={styles.label01}>{t('dose', 'Dose').toUpperCase()}</span>{' '}
                   <span className={styles.dosage}>
-                    {medication.dose} {medication.doseUnits?.display?.toLowerCase()}
+                    {formatDecimal(medication.dose)} {medication.doseUnits?.display?.toLowerCase()}
                   </span>{' '}
                 </>
               )}
@@ -148,7 +149,7 @@ const MedicationsDetailsTable: React.FC<MedicationsDetailsTableProps> = ({
                     <>&mdash; </>
                   )}
                   {t('medicationDurationAndUnit', 'for {{duration}} {{durationUnit}}', {
-                    duration: medication.duration,
+                    duration: formatDecimal(medication.duration),
                     durationUnit: medication.durationUnits?.display?.toLowerCase(),
                   })}{' '}
                 </>
@@ -189,8 +190,8 @@ const MedicationsDetailsTable: React.FC<MedicationsDetailsTableProps> = ({
             {medication.orderReasonNonCoded && medication.quantity != null && <>&mdash;</>}
             {medication.quantity != null && (
               <span>
-                <span className={styles.label01}> {t('quantity', 'Quantity').toUpperCase()}</span> {medication.quantity}{' '}
-                {medication?.quantityUnits?.display}
+                <span className={styles.label01}> {t('quantity', 'Quantity').toUpperCase()}</span>{' '}
+                {formatDecimal(medication.quantity)} {medication?.quantityUnits?.display}
               </span>
             )}
           </p>

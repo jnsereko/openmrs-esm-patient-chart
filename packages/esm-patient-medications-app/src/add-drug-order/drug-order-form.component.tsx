@@ -1,5 +1,6 @@
 import React, { type ChangeEvent, type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { type TFunction } from 'i18next';
 import classNames from 'classnames';
 import {
   Button,
@@ -49,6 +50,7 @@ import { useMedicationOrders, useRequireOutpatientQuantity } from '../api';
 import { useOrderConfig } from '../api/order-config';
 import { type ConfigObject } from '../config-schema';
 import { DecimalTextInput } from '../components/decimal-text-input.component';
+import { formatDecimal } from '../components/format-decimal';
 import {
   durationToDays,
   getStartDateMinimum,
@@ -104,6 +106,25 @@ function isFutureRevisionOfActiveMedication(
   return !(initialScheduledDate && initialScheduledDate > now);
 }
 
+/**
+ * The patient's gender in the session language (« Femme »), as the medications table names it. It was the FHIR
+ * code capitalised, « Female » in a French session (UVL-EMR #752).
+ */
+export function genderText(gender: string | undefined, t: TFunction): string {
+  switch (gender) {
+    case 'male':
+      return t('male', 'Male');
+    case 'female':
+      return t('female', 'Female');
+    case 'other':
+      return t('other', 'Other');
+    case 'unknown':
+      return t('unknown', 'Unknown');
+    default:
+      return capitalize(gender);
+  }
+}
+
 function MedicationInfoHeader({
   drug,
   routeValue,
@@ -132,7 +153,7 @@ function MedicationInfoHeader({
             &mdash; <span className={styles.caption01}>{t('dose', 'Dose').toUpperCase()}</span>{' '}
             <strong>
               <span className={styles.productiveHeading02}>
-                {dosage} {unitValue.toLowerCase()}
+                {formatDecimal(dosage)} {unitValue.toLowerCase()}
               </span>
             </strong>
           </>
@@ -494,7 +515,7 @@ export function DrugOrderForm({
             <span className={styles.bodyShort02}>{patientName}</span>
             <span className={classNames(styles.text02, styles.bodyShort01)}>
               {patientIdentifier && <>{patientIdentifier} &middot; </>}
-              {capitalize(patient?.gender)} &middot; {age(patient?.birthDate)} &middot;{' '}
+              {genderText(patient?.gender, t)} &middot; {age(patient?.birthDate)} &middot;{' '}
               <span>{formatPartialDate(patient?.birthDate, { mode: 'wide', time: false })}</span>
             </span>
           </div>

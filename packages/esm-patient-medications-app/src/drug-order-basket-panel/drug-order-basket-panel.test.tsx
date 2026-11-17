@@ -2,6 +2,7 @@ import React from 'react';
 import { vi, describe, expect, test } from 'vitest';
 import { screen, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { getLocale } from '@openmrs/esm-framework';
 import { type OrderBasketExtensionProps, type DrugOrderBasketItem } from '@openmrs/esm-patient-common-lib';
 import { getByTextWithMarkup } from 'tools';
 import { mockDrugSearchResultApiData, mockFhirPatient, mockPatientDrugOrdersApiData } from '__mocks__';
@@ -58,5 +59,21 @@ describe('OrderBasketPanel', () => {
     await user.click(removeAspirin81Button);
     rerender(<DrugOrderBasketPanel {...testProps} />); // re-render because the mocked hook does not trigger a render
     await expect(screen.getByText(/Drug Orders \(3\)/i)).toBeInTheDocument();
+  });
+
+  test("writes the dose and quantity with the session language's decimal mark (UVL-EMR #752)", () => {
+    vi.mocked(getLocale).mockReturnValue('fr');
+    const order = {
+      ...getTemplateOrderBasketItem(mockDrugSearchResultApiData[0], null),
+      dosage: 2.5,
+      pillsDispensed: 7.5,
+    } as DrugOrderBasketItem;
+    mockUseOrderBasket.mockReturnValue({ orders: [order], setOrders: vi.fn() });
+
+    render(<DrugOrderBasketPanel {...testProps} />);
+
+    expect(getByTextWithMarkup(/Dose\s*2,5/i)).toBeVisible();
+    expect(getByTextWithMarkup(/Quantity 7,5/i)).toBeVisible();
+    expect(screen.queryByText(/2\.5/)).not.toBeInTheDocument();
   });
 });

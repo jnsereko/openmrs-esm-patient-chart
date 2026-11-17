@@ -8,7 +8,7 @@ import { mockPatient } from 'tools';
 import { mockDrugSearchResultApiData, mockSessionDataResponse } from '__mocks__';
 import { configSchema, type ConfigObject } from '../config-schema';
 import { getTemplateOrderBasketItem } from './drug-search/drug-search.resource';
-import DrugOrderForm, { getOrderStartDateForSubmission } from './drug-order-form.component';
+import DrugOrderForm, { genderText, getOrderStartDateForSubmission } from './drug-order-form.component';
 
 const mockUseConfig = vi.mocked(useConfig<ConfigObject>);
 const mockUseSession = vi.mocked(useSession);
@@ -1043,5 +1043,18 @@ describe('DrugOrderForm - patient header', () => {
     renderDrugOrderForm(createNewOrderBasketItem(), vi.fn(), { ...mockPatient, birthDate });
 
     expect(screen.getByText(expected)).toBeInTheDocument();
+  });
+});
+
+describe('genderText', () => {
+  it("names the patient's gender in the session language, not the capitalised FHIR code (UVL-EMR #752)", () => {
+    const french = { female: 'Femme', male: 'Homme', other: 'Autre', unknown: 'Inconnu' };
+    const t = ((key: string, defaultValue: string) => french[key] ?? defaultValue) as any;
+
+    expect(genderText('female', t)).toBe('Femme');
+    expect(genderText('male', t)).toBe('Homme');
+    expect(genderText('unknown', t)).toBe('Inconnu');
+    expect(genderText('something-else', t)).toBe('Something-else');
+    expect(genderText(undefined, t)).toBe('');
   });
 });

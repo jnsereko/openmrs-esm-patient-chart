@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ClickableTile, IconButton, Tile } from '@carbon/react';
 import { ExtensionSlot, TrashCanIcon, useLayoutType, WarningIcon } from '@openmrs/esm-framework';
 import { type DrugOrderBasketItem } from '@openmrs/esm-patient-common-lib';
+import { formatDecimal } from '../components/format-decimal';
 import styles from './order-basket-item-tile.scss';
 
 export interface OrderBasketItemTileProps {
@@ -57,7 +58,7 @@ export default function OrderBasketItemTile({ orderBasketItem, onItemClick, onRe
             <span className={styles.label01}>
               <span className={styles.doseCaption}>{t('dose', 'Dose').toUpperCase()}</span>{' '}
               <span className={styles.dosageLabel}>
-                {orderBasketItem.dosage} {orderBasketItem.unit?.value ?? ''}
+                {formatDecimal(orderBasketItem.dosage)} {orderBasketItem.unit?.value ?? ''}
               </span>{' '}
               <span className={styles.dosageInfo}>
                 {orderBasketItem.route?.value && <>&mdash; {orderBasketItem.route.value} </>}
@@ -69,7 +70,7 @@ export default function OrderBasketItemTile({ orderBasketItem, onItemClick, onRe
                 ) : null}
                 {orderBasketItem.pillsDispensed ? (
                   <>
-                    &mdash; {t('quantity', 'Quantity').toUpperCase()} {orderBasketItem.pillsDispensed}{' '}
+                    &mdash; {t('quantity', 'Quantity').toUpperCase()} {formatDecimal(orderBasketItem.pillsDispensed)}{' '}
                     {orderBasketItem.quantityUnits?.value?.toLowerCase()}{' '}
                   </>
                 ) : null}
