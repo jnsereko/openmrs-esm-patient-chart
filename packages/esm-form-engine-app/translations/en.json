@@ -89,6 +89,7 @@
   "submittedFormDescription": "Form submitted successfully",
   "submitting": "Submitting",
   "successfullyMarkedAsDeceased": "The patient has successfully been marked as deceased",
+  "textNotPickedFromList": "\"{{- text}}\" is not saved: pick an entry from the list, or clear the field",
   "thisList": "this list",
   "time": "Time",
   "toggleCollapseOrExpand": "Toggle collapse or expand",
