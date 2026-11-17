@@ -14,7 +14,7 @@ import {
   IconButton,
   InlineNotification,
   Layer,
-  NumberInput,
+  type NumberInput,
   TextArea,
   TextInput,
   Toggle,
@@ -48,6 +48,7 @@ import { usePatientIdentifier } from '@openmrs/esm-patient-common-lib';
 import { useMedicationOrders, useRequireOutpatientQuantity } from '../api';
 import { useOrderConfig } from '../api/order-config';
 import { type ConfigObject } from '../config-schema';
+import { DecimalTextInput } from '../components/decimal-text-input.component';
 import {
   durationToDays,
   getStartDateMinimum,
@@ -1035,21 +1036,28 @@ const ControlledFieldInput = ({
     }
 
     if (type === 'number') {
-      const numberInputProps = restProps as ComponentProps<typeof NumberInput>;
+      // A text input, not <input type="number">, which a French-locale browser empties on a typed dot
+      // (UVL-EMR #727). Saving is still checked by the form schema; min, max and step only styled the field.
+      const {
+        allowEmpty: _allowEmpty,
+        disableWheel: _disableWheel,
+        hideSteppers: _hideSteppers,
+        label,
+        max: _max,
+        min: _min,
+        step: _step,
+        ...textInputProps
+      } = restProps as Omit<ComponentProps<typeof NumberInput>, 'onChange' | 'onBlur' | 'value' | 'ref'>;
       return (
-        <NumberInput
-          allowEmpty
+        <DecimalTextInput
           className={fieldErrorStyles}
-          disableWheel
+          labelText={label}
           onBlur={onBlur}
-          onChange={(_, { value }) => {
-            const number = parseFloat(String(value));
-            handleChange(isNaN(number) ? null : number);
-          }}
+          onChange={(number) => handleChange(number ?? null)}
           ref={ref}
           size={isTablet ? 'md' : 'sm'}
-          value={typeof value === 'number' ? value : ''}
-          {...numberInputProps}
+          value={value}
+          {...textInputProps}
         />
       );
     }

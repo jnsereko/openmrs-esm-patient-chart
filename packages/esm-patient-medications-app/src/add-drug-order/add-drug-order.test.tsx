@@ -278,12 +278,14 @@ describe('AddDrugOrderWorkspace drug search', () => {
     expect(screen.getByText(/Order Form/i)).toBeInTheDocument();
 
     // Clear the pre-filled dose value and enter 0
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '0');
     await user.click(screen.getByText(/Save order/i));
 
-    expect(await screen.findByText(/dose must be greater than 0/i)).toBeInTheDocument();
+    // Under the field and in the list by the save button: a text input has no native minimum to stop the submit.
+    expect(await screen.findAllByText(/dose must be greater than 0/i)).toHaveLength(2);
+    expect(screen.getByText(/the order was not saved/i)).toBeInTheDocument();
   });
 });
 

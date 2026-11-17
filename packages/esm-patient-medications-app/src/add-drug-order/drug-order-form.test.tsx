@@ -189,7 +189,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     const user = userEvent.setup();
     renderDrugOrderForm(createNewOrderBasketItem());
 
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -197,7 +197,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -206,8 +206,8 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(screen.getByText('Days'));
 
     await waitFor(() => {
-      const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
-      expect(quantityInput).toHaveValue(14);
+      const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
+      expect(quantityInput).toHaveValue('14');
     });
     expect(screen.getByText(/auto-calculated/i)).toBeInTheDocument();
   });
@@ -216,7 +216,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     const user = userEvent.setup();
     renderDrugOrderForm(createNewOrderBasketItem());
 
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '3');
 
@@ -224,7 +224,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '1');
 
@@ -234,8 +234,8 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
 
     // 3 × 2.0 × 7 = 42
     await waitFor(() => {
-      const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
-      expect(quantityInput).toHaveValue(42);
+      const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
+      expect(quantityInput).toHaveValue('42');
     });
   });
 
@@ -244,7 +244,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(createNewOrderBasketItem());
 
     // Fill all inputs
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -252,7 +252,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -261,14 +261,14 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(screen.getByText('Days'));
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(14);
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('14');
     });
 
     // Clear the duration
     await user.clear(durationInput);
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).not.toHaveValue();
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).not.toHaveValue();
     });
   });
 
@@ -277,7 +277,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(createNewOrderBasketItem());
 
     // Fill all inputs
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -285,7 +285,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -294,7 +294,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(screen.getByText('Days'));
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(14);
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('14');
     });
 
     // Check PRN
@@ -302,7 +302,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(prnCheckbox);
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).not.toHaveValue();
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).not.toHaveValue();
     });
     expect(screen.queryByText(/auto-calculated/i)).not.toBeInTheDocument();
   });
@@ -316,7 +316,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(freeTextToggle);
 
     // The quantity input should remain empty
-    const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
+    const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
     expect(quantityInput).not.toHaveValue();
     expect(screen.queryByText(/auto-calculated/i)).not.toBeInTheDocument();
   });
@@ -362,7 +362,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     const user = userEvent.setup();
     renderDrugOrderForm(createNewOrderBasketItem());
 
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -376,7 +376,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.type(freeTextDosage, 'Take one tablet when needed');
 
     await user.click(freeTextToggle);
-    expect(screen.getByRole('spinbutton', { name: /dose/i })).toHaveValue(1);
+    expect(screen.getByRole('textbox', { name: /dose/i })).toHaveValue('1');
     expect(screen.getByPlaceholderText(/additional dosing instructions/i)).toHaveValue('Take after eating');
 
     await user.click(freeTextToggle);
@@ -417,6 +417,40 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     });
   });
 
+  // A French-locale browser empties an <input type="number"> on a typed dot ("2.5" was saved as 5): the number
+  // fields are text inputs that take a dot or a comma (UVL-EMR #727).
+  it.each([
+    ['2.5', 2.5],
+    ['2,5', 2.5],
+    ['2', 2],
+  ])('saves a dose typed as "%s" as %s', async (typed, expected) => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderDrugOrderForm(createNewOrderBasketItem({ ...completeMedicationOrderFields, isQuantityManual: true }), onSave);
+
+    const doseInput = screen.getByRole('textbox', { name: /^dose$/i });
+    expect(doseInput).toHaveAttribute('inputmode', 'decimal');
+    await user.clear(doseInput);
+    await user.type(doseInput, typed);
+    expect(doseInput).toHaveValue(typed);
+
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0]).toMatchObject({ dosage: expected, numRefills: 0, pillsDispensed: 7 });
+  });
+
+  it('ignores letters, a minus sign and a second decimal point in the dose', async () => {
+    const user = userEvent.setup();
+    renderDrugOrderForm(createNewOrderBasketItem(completeMedicationOrderFields));
+
+    const doseInput = screen.getByRole('textbox', { name: /^dose$/i });
+    await user.clear(doseInput);
+    await user.type(doseInput, '-1a,2.5');
+
+    expect(doseInput).toHaveValue('1,25');
+  });
+
   it('keeps draft values when saving fails so clinicians can retry', async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockRejectedValue(new Error('Save failed'));
@@ -435,9 +469,9 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
     expect(patientInstructions).toHaveValue('Take after eating');
     expect(indication).toHaveValue('Pain');
-    expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(7);
+    expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('7');
     expect(screen.getByRole('combobox', { name: /quantity unit/i })).toHaveValue('Tablet');
-    expect(screen.getByRole('spinbutton', { name: /prescription refills/i })).toHaveValue(0);
+    expect(screen.getByRole('textbox', { name: /prescription refills/i })).toHaveValue('0');
   });
 
   it('does not auto-calculate when quantity unit differs from dose unit', async () => {
@@ -445,7 +479,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(createNewOrderBasketItem());
 
     // Fill all inputs
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -453,7 +487,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -462,7 +496,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(screen.getByText('Days'));
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(14);
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('14');
     });
 
     // Change quantity unit to something different from dose unit (Tablet)
@@ -472,7 +506,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(screen.getByText('Application'));
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).not.toHaveValue();
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).not.toHaveValue();
     });
   });
 
@@ -481,7 +515,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(createNewOrderBasketItem());
 
     // Fill all inputs to trigger auto-calc
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -489,7 +523,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -497,9 +531,9 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(durationUnitCombobox);
     await user.click(screen.getByText('Days'));
 
-    const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
+    const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(14);
+      expect(quantityInput).toHaveValue('14');
     });
 
     // Manually edit quantity
@@ -507,7 +541,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.type(quantityInput, '20');
 
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(20);
+      expect(quantityInput).toHaveValue('20');
     });
     expect(screen.queryByText(/auto-calculated/i)).not.toBeInTheDocument();
     expect(screen.getByText(/apply calculated quantity \(14\)/i)).toBeInTheDocument();
@@ -518,7 +552,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(createNewOrderBasketItem());
 
     // Fill all inputs
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -526,7 +560,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -534,9 +568,9 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(durationUnitCombobox);
     await user.click(screen.getByText('Days'));
 
-    const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
+    const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(14);
+      expect(quantityInput).toHaveValue('14');
     });
 
     // Manual edit
@@ -544,7 +578,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.type(quantityInput, '20');
 
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(20);
+      expect(quantityInput).toHaveValue('20');
     });
 
     // Change duration — manual value should be preserved, recalculate link should update
@@ -553,7 +587,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
 
     // Quantity stays at 20 (manual override is sticky)
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(20);
+      expect(quantityInput).toHaveValue('20');
     });
     // Recalculate link shows the would-be value: 1 × 2.0 × 14 = 28
     expect(screen.getByText(/apply calculated quantity \(28\)/i)).toBeInTheDocument();
@@ -564,7 +598,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(createNewOrderBasketItem());
 
     // Fill all inputs
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -572,7 +606,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -580,9 +614,9 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(durationUnitCombobox);
     await user.click(screen.getByText('Days'));
 
-    const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
+    const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(14);
+      expect(quantityInput).toHaveValue('14');
     });
 
     // Manual edit
@@ -590,14 +624,14 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.type(quantityInput, '20');
 
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(20);
+      expect(quantityInput).toHaveValue('20');
     });
 
     // Click recalculate
     await user.click(screen.getByText(/apply calculated quantity \(14\)/i));
 
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(14);
+      expect(quantityInput).toHaveValue('14');
     });
     expect(screen.getByText(/auto-calculated/i)).toBeInTheDocument();
     expect(screen.queryByText(/apply calculated quantity/i)).not.toBeInTheDocument();
@@ -608,7 +642,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(createNewOrderBasketItem());
 
     // Fill all inputs
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -616,7 +650,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -624,9 +658,9 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(durationUnitCombobox);
     await user.click(screen.getByText('Days'));
 
-    const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
+    const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(14);
+      expect(quantityInput).toHaveValue('14');
     });
 
     // Manual edit
@@ -634,14 +668,14 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.type(quantityInput, '20');
 
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(20);
+      expect(quantityInput).toHaveValue('20');
     });
 
     // Clear the quantity field — should stay empty (manual override is sticky)
     await user.clear(quantityInput);
 
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(null);
+      expect(quantityInput).toHaveValue('');
     });
     expect(screen.getByText(/apply calculated quantity \(14\)/i)).toBeInTheDocument();
   });
@@ -663,18 +697,18 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     });
     renderDrugOrderForm(item);
 
-    const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
-    expect(quantityInput).toHaveValue(14);
+    const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
+    expect(quantityInput).toHaveValue('14');
     expect(screen.getByText(/auto-calculated/i)).toBeInTheDocument();
 
     // Changing duration should auto-update quantity (not show recalculate link)
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '14');
 
     // 1 × 2.0 × 14 = 28
     await waitFor(() => {
-      expect(quantityInput).toHaveValue(28);
+      expect(quantityInput).toHaveValue('28');
     });
     expect(screen.getByText(/auto-calculated/i)).toBeInTheDocument();
     expect(screen.queryByText(/apply calculated quantity/i)).not.toBeInTheDocument();
@@ -701,7 +735,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     // Quantity is preserved from the existing order until the clinician applies the
     // calculated quantity.
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(30);
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('30');
     });
     expect(screen.queryByText(/auto-calculated/i)).not.toBeInTheDocument();
   });
@@ -728,16 +762,16 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
       renderDrugOrderForm(item);
 
       await waitFor(() => {
-        expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(5);
+        expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('5');
       });
       expect(screen.queryByText(/apply calculated quantity/i)).not.toBeInTheDocument();
 
-      const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+      const durationInput = screen.getByRole('textbox', { name: /duration/i });
       await user.clear(durationInput);
       await user.type(durationInput, '7');
 
       await waitFor(() => {
-        expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(5);
+        expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('5');
       });
       expect(screen.getByText(/apply calculated quantity \(7\)/i)).toBeInTheDocument();
     },
@@ -763,7 +797,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     renderDrugOrderForm(item);
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(30);
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('30');
     });
 
     // Re-select a frequency that has frequencyPerDay — clear first so all options appear
@@ -774,7 +808,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     // Quantity is preserved — manual override is sticky for REVISE orders.
     // Recalculate link shows the would-be value: 1 × 2.0 × 7 = 14
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(30);
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('30');
     });
     expect(screen.getByText(/apply calculated quantity \(14\)/i)).toBeInTheDocument();
 
@@ -782,7 +816,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(screen.getByText(/apply calculated quantity \(14\)/i));
 
     await waitFor(() => {
-      expect(screen.getByRole('spinbutton', { name: /quantity to dispense/i })).toHaveValue(14);
+      expect(screen.getByRole('textbox', { name: /quantity to dispense/i })).toHaveValue('14');
     });
     expect(screen.getByText(/auto-calculated/i)).toBeInTheDocument();
   });
@@ -796,7 +830,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     });
     renderDrugOrderForm(createNewOrderBasketItem());
 
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -804,7 +838,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -812,7 +846,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(durationUnitCombobox);
     await user.click(screen.getByText('Days'));
 
-    const quantityInput = screen.getByRole('spinbutton', { name: /quantity to dispense/i });
+    const quantityInput = screen.getByRole('textbox', { name: /quantity to dispense/i });
     // Quantity should remain empty — auto-calc is disabled
     await waitFor(() => {
       expect(quantityInput).not.toHaveValue();
@@ -831,7 +865,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     const user = userEvent.setup();
     renderDrugOrderForm(createNewOrderBasketItem());
 
-    const doseInput = screen.getByRole('spinbutton', { name: /dose/i });
+    const doseInput = screen.getByRole('textbox', { name: /dose/i });
     await user.clear(doseInput);
     await user.type(doseInput, '1');
 
@@ -839,7 +873,7 @@ describe('DrugOrderForm - auto-calculation of dispense quantity', () => {
     await user.click(frequencyCombobox);
     await user.click(screen.getByText('Twice daily'));
 
-    const durationInput = screen.getByRole('spinbutton', { name: /duration/i });
+    const durationInput = screen.getByRole('textbox', { name: /duration/i });
     await user.clear(durationInput);
     await user.type(durationInput, '7');
 
@@ -945,7 +979,7 @@ describe('DrugOrderForm - required field validation', () => {
     const { numRefills, ...fieldsWithoutRefills } = completeMedicationOrderFields;
     renderDrugOrderForm(createNewOrderBasketItem(fieldsWithoutRefills), onSave);
 
-    expect(screen.getByRole('spinbutton', { name: /prescription refills/i })).toHaveValue(0);
+    expect(screen.getByRole('textbox', { name: /prescription refills/i })).toHaveValue('0');
 
     fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
 
@@ -960,7 +994,7 @@ describe('DrugOrderForm - required field validation', () => {
 
     expect(screen.queryByText(/the order was not saved/i)).not.toBeInTheDocument();
 
-    await user.clear(screen.getByRole('spinbutton', { name: /prescription refills/i }));
+    await user.clear(screen.getByRole('textbox', { name: /prescription refills/i }));
     fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
 
     expect(await screen.findByText(/the order was not saved/i)).toBeInTheDocument();
@@ -971,7 +1005,7 @@ describe('DrugOrderForm - required field validation', () => {
     ).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
 
-    await user.type(screen.getByRole('spinbutton', { name: /prescription refills/i }), '0');
+    await user.type(screen.getByRole('textbox', { name: /prescription refills/i }), '0');
     await user.type(screen.getByPlaceholderText(/e\.g\. "Hypertension"/i), 'Pain');
 
     await waitFor(() => expect(screen.queryByText(/the order was not saved/i)).not.toBeInTheDocument());
