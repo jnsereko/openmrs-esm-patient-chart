@@ -68,6 +68,7 @@ import {
 import { buildGeneralOrder, buildLabOrder, buildMedicationOrder } from '../utils';
 import { ORDER_TYPES, getOrderGrouping, isValidOmrsOrderType } from '../constants/order-types';
 import GeneralOrderTable from './general-order-table.component';
+import { DrugOrderSummary } from './drug-order-summary.component';
 import MedicationRecord from './medication-record.component';
 import PrintComponent from '../print/print.component';
 import styles from './order-details-table.scss';
@@ -253,7 +254,11 @@ const OrderDetailsTable: React.FC<OrderDetailsProps> = ({
         orderNumber: order.orderNumber,
         dateOfOrder: <div className={styles.singleLineText}>{formatDate(parseDate(order.dateActivated))}</div>,
         orderType: capitalize(order.orderType?.display ?? '-'),
-        order: order.display,
+        // A drug order is written in the session language; the object's text is what the search matches (#752)
+        order:
+          order.type === ORDER_TYPES.DRUG_ORDER
+            ? { content: <DrugOrderSummary order={order} />, toString: () => order.display }
+            : order.display,
         priority: (
           <Tag type={getPriorityTagType(order.urgency)}>
             {

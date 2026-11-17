@@ -7,6 +7,7 @@ import {
   type ConfigObject,
   getDefaultsFromConfigSchema,
   launchWorkspace2,
+  getLocale,
   openmrsFetch,
   useConfig,
   useSession,
@@ -17,6 +18,7 @@ import {
   useOrderTypes,
   usePatientOrders,
   useOrderBasket,
+  useDrugOrderByUuid,
 } from '@openmrs/esm-patient-common-lib';
 import { configSchema } from '../config-schema';
 import { mockOrders, mockSessionDataResponse } from '__mocks__';
@@ -31,6 +33,7 @@ const mockSession = vi.mocked(useSession);
 const mockUseConfig = vi.mocked(useConfig<ConfigObject>);
 const mockUseReactToPrint = vi.mocked(useReactToPrint);
 const mockLaunchWorkspace2 = vi.mocked(launchWorkspace2);
+const mockUseDrugOrderByUuid = vi.mocked(useDrugOrderByUuid);
 
 mockSession.mockReturnValue(mockSessionDataResponse.data);
 mockOpenmrsFetch.mockImplementation(vi.fn());
@@ -49,6 +52,7 @@ vi.mock('@openmrs/esm-patient-common-lib', async () => {
     useOrderTypes: vi.fn(),
     usePatient: vi.fn(),
     useOrderBasket: vi.fn(),
+    useDrugOrderByUuid: vi.fn(),
   };
 });
 
@@ -117,6 +121,7 @@ describe('OrderDetailsTable', () => {
   const user = userEvent.setup();
 
   beforeEach(() => {
+    mockUseDrugOrderByUuid.mockReturnValue({ data: null, error: undefined, isLoading: true });
     mockUseOrderBasket.mockReturnValue({
       orders: [],
       setOrders: vi.fn(),
@@ -245,6 +250,28 @@ describe('OrderDetailsTable', () => {
 
     expect(screen.getByText(/no matching orders to display/i)).toBeInTheDocument();
     expect(screen.getByText(/check the filters above/i)).toBeInTheDocument();
+  });
+
+  it("writes a drug order's line in the session language once its fields are read (UVL-EMR #752)", async () => {
+    vi.mocked(getLocale).mockReturnValue('fr');
+    const drugOrder = (mockOrders as unknown as Array<Order>).find((order) => order.orderNumber === 'ORD-321');
+    mockUseDrugOrderByUuid.mockImplementation((uuid) => ({
+      data: uuid === drugOrder.uuid ? ({ ...drugOrder, dose: 2.5 } as Order) : null,
+      error: undefined,
+      isLoading: false,
+    }));
+    renderOrderDetailsTable();
+
+    await screen.findByRole('table');
+
+    expect(
+      screen.getByRole('cell', { name: /^Permethrin — 2,5 ampule\(s\) — oral — once daily — for 1 days$/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/\(NEW\)/)).not.toBeInTheDocument();
+
+    // The search still matches the server's text
+    await user.type(screen.getByRole('searchbox'), 'take after eating');
+    expect(screen.getByRole('cell', { name: /^Permethrin — 2,5/i })).toBeInTheDocument();
   });
 
   it('prints the orders in the list when the print button is clicked', async () => {
