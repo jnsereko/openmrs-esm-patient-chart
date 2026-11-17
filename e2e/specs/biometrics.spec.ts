@@ -18,19 +18,19 @@ test('Add, edit and delete patient biometrics', async ({ page, patient }) => {
   });
 
   await test.step('When I fill `170` as the height', async () => {
-    await biometricsPage.page.getByRole('spinbutton', { name: /height/i }).fill('170');
+    await biometricsPage.page.getByRole('textbox', { name: /height/i }).fill('170');
   });
 
   await test.step('And I fill `65` as the weight', async () => {
-    await biometricsPage.page.getByRole('spinbutton', { name: /weight/i }).fill('65');
+    await biometricsPage.page.getByRole('textbox', { name: /weight/i }).fill('65');
   });
 
   await test.step('Then I should see `22.51` as the auto calculated body mass index', async () => {
-    await expect(biometricsPage.page.getByRole('spinbutton', { name: /bmi/i })).toHaveValue('22.5');
+    await expect(biometricsPage.page.getByRole('textbox', { name: /bmi/i })).toHaveValue('22.5');
   });
 
   await test.step('When I fill `25` as the mid upper arm circumference', async () => {
-    await biometricsPage.page.getByRole('spinbutton', { name: /muac/i }).fill('25');
+    await biometricsPage.page.getByRole('textbox', { name: /muac/i }).fill('25');
   });
 
   await test.step('And I click on the `Save and close` button', async () => {
@@ -69,19 +69,19 @@ test('Add, edit and delete patient biometrics', async ({ page, patient }) => {
 
   await test.step('Then I should see the `Edit Vitals and Biometrics` form launch in the workspace', async () => {
     await expect(biometricsPage.page.getByText(/edit vitals and biometrics/i)).toBeVisible();
-    await expect(biometricsPage.page.getByRole('spinbutton', { name: /height/i })).toHaveValue('170');
-    await expect(biometricsPage.page.getByRole('spinbutton', { name: /weight/i })).toHaveValue('65');
-    await expect(biometricsPage.page.getByRole('spinbutton', { name: /muac/i })).toHaveValue('25');
+    await expect(biometricsPage.page.getByRole('textbox', { name: /height/i })).toHaveValue('170');
+    await expect(biometricsPage.page.getByRole('textbox', { name: /weight/i })).toHaveValue('65');
+    await expect(biometricsPage.page.getByRole('textbox', { name: /muac/i })).toHaveValue('25');
   });
 
   await test.step('When I fill `175` as the height', async () => {
-    await biometricsPage.page.getByRole('spinbutton', { name: /height/i }).clear();
-    await biometricsPage.page.getByRole('spinbutton', { name: /height/i }).fill('175');
+    await biometricsPage.page.getByRole('textbox', { name: /height/i }).clear();
+    await biometricsPage.page.getByRole('textbox', { name: /height/i }).fill('175');
   });
 
   await test.step('And I fill `70` as the weight', async () => {
-    await biometricsPage.page.getByRole('spinbutton', { name: /weight/i }).clear();
-    await biometricsPage.page.getByRole('spinbutton', { name: /weight/i }).fill('70');
+    await biometricsPage.page.getByRole('textbox', { name: /weight/i }).clear();
+    await biometricsPage.page.getByRole('textbox', { name: /weight/i }).fill('70');
   });
 
   await test.step('And I click on the `Save and close` button', async () => {

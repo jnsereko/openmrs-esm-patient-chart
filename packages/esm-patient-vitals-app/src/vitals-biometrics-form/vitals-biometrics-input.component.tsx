@@ -1,7 +1,7 @@
-import React, { Fragment, useId, useState } from 'react';
+import React, { Fragment, useEffect, useId, useState } from 'react';
 import classNames from 'classnames';
 import { type Control, Controller } from 'react-hook-form';
-import { FormLabel, NumberInput, TextArea } from '@carbon/react';
+import { FormLabel, TextArea, TextInput } from '@carbon/react';
 import { Warning } from '@carbon/react/icons';
 import { useTranslation } from 'react-i18next';
 import { useLayoutType, ResponsiveWrapper } from '@openmrs/esm-framework';
@@ -37,6 +37,82 @@ function formatNormalRange(range?: NormalRange | null) {
     return `≤ ${range.hiNormal}`;
   }
   return null;
+}
+
+/** What a number field accepts as it is typed: digits with at most one decimal point, a dot or a comma. */
+const decimalTextPattern = /^\d*([.,]\d*)?$/;
+
+/**
+ * The number a field's text means, a comma read as the decimal point; undefined when it holds no digit.
+ * A French-locale browser empties an `<input type="number">` on a typed dot, so these fields are text
+ * inputs and read "36.4" and "36,4" alike (UVL-EMR #719).
+ */
+export function parseDecimalText(text: string): number | undefined {
+  const normalized = text.trim().replace(',', '.');
+  if (!/\d/.test(normalized)) {
+    return undefined;
+  }
+  const number = Number(normalized);
+  return isNaN(number) ? undefined : number;
+}
+
+function toNumber(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+  const number = Number(value);
+  return isNaN(number) ? undefined : number;
+}
+
+interface DecimalTextInputProps {
+  className?: string;
+  id: string;
+  inputRef: React.Ref<HTMLInputElement>;
+  /** The absolute limits, kept on the input as data; the form checks them. */
+  max?: number;
+  min?: number;
+  name: string;
+  onBlur: () => void;
+  onChange: (value: number | undefined) => void;
+  onFocus: () => void;
+  placeholder: string;
+  readOnly?: boolean;
+  style?: React.CSSProperties;
+  value: unknown;
+}
+
+/** A number field typed as text: keeps what is typed ("36," on the way to "36,4") and reports the number. */
+function DecimalTextInput({ inputRef, onChange, value, ...inputProps }: DecimalTextInputProps) {
+  const [text, setText] = useState(() => (toNumber(value) === undefined ? '' : String(toNumber(value))));
+
+  // The form set another value (an encounter being edited, the computed BMI): show it, unless the text
+  // already means it.
+  useEffect(() => {
+    setText((current) => {
+      const number = toNumber(value);
+      return parseDecimalText(current) === number ? current : number === undefined ? '' : String(number);
+    });
+  }, [value]);
+
+  return (
+    <TextInput
+      {...inputProps}
+      autoComplete="off"
+      inputMode="decimal"
+      labelText=""
+      onChange={(event) => {
+        const nextText = event.target.value;
+        if (!decimalTextPattern.test(nextText.trim())) {
+          return;
+        }
+        setText(nextText);
+        onChange(parseDecimalText(nextText));
+      }}
+      ref={inputRef}
+      title={inputProps.name}
+      value={text}
+    />
+  );
 }
 
 interface VitalsAndBiometricsInputProps {
@@ -88,19 +164,10 @@ const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
   const { t } = useTranslation();
   const fieldId = useId();
   const isTablet = useLayoutType() === 'tablet';
-  const [invalid, setInvalid] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
   const abnormalValues: Array<AbnormalValue> = ['critically_low', 'critically_high', 'high', 'low'];
   const hasAbnormalValue = !isFocused && interpretation && abnormalValues.includes(interpretation as AbnormalValue);
-
-  function checkValidity(value, onChange) {
-    setInvalid(value !== '' && isNaN(Number(value)));
-
-    if (!invalid) {
-      onChange(value === '' ? undefined : Number(value));
-    }
-  }
 
   function handleFocusChange(isFocused: boolean) {
     setIsFocused(isFocused);
@@ -111,7 +178,7 @@ const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
     ? formattedNormalRanges.map((range) => range ?? '–').join(' / ')
     : null;
 
-  const isInvalidInput = !isValueWithinReferenceRange || invalid;
+  const isInvalidInput = !isValueWithinReferenceRange;
   const showInvalidInputError = Boolean(showErrorMessage && isInvalidInput) || decimalNotAllowed;
   const errorMessageClass = showInvalidInputError ? styles.invalidInput : '';
 
@@ -164,25 +231,20 @@ const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
                         control={control}
                         render={({ field: { onChange, ref, value } }) => {
                           return (
-                            <NumberInput
-                              allowEmpty
+                            <DecimalTextInput
                               className={numberInputClasses}
-                              disableWheel
-                              hideSteppers
                               id={`${fieldId}-${fieldProperty.id}`}
+                              inputRef={ref}
                               max={fieldProperty.max ?? undefined}
                               min={fieldProperty.min ?? undefined}
                               name={fieldProperty.name}
                               onBlur={() => handleFocusChange(false)}
-                              onChange={(event, { value }) => checkValidity(value, onChange)}
+                              onChange={onChange}
                               onFocus={() => handleFocusChange(true)}
                               placeholder={generatePlaceholder(fieldProperty.name)}
                               readOnly={readOnly}
-                              ref={ref}
                               style={{ ...fieldStyles }}
-                              title={fieldProperty.name}
-                              type="number"
-                              value={value ?? ''}
+                              value={value}
                             />
                           );
                         }}

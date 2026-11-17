@@ -130,23 +130,23 @@ test.describe('Vitals validation for different age groups', () => {
       });
 
       await test.step(`When I enter the temperature: ${temperature}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /temperature/i }).fill(temperature);
+        await vitalsPage.page.getByRole('textbox', { name: /temperature/i }).fill(temperature);
       });
 
       await test.step(`And I enter the systolic blood pressure: ${systolic}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /systolic/i }).fill(systolic);
+        await vitalsPage.page.getByRole('textbox', { name: /systolic/i }).fill(systolic);
       });
 
       await test.step(`And I enter the diastolic blood pressure: ${diastolic}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i }).fill(diastolic);
+        await vitalsPage.page.getByRole('textbox', { name: /diastolic/i }).fill(diastolic);
       });
 
       await test.step(`And I enter the pulse: ${pulse}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /pulse/i }).fill(pulse);
+        await vitalsPage.page.getByRole('textbox', { name: /pulse/i }).fill(pulse);
       });
 
       await test.step(`And I enter the respiration rate: ${respiratoryRate}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /respiration rate/i }).fill(respiratoryRate);
+        await vitalsPage.page.getByRole('textbox', { name: /respiration rate/i }).fill(respiratoryRate);
       });
 
       await test.step('And I click on the `Save and close` button to save the vitals', async () => {
@@ -199,23 +199,23 @@ test.describe('Vitals validation for different age groups', () => {
       });
 
       await test.step(`When I enter the temperature: ${temperature.value}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /temperature/i }).fill(temperature.value);
+        await vitalsPage.page.getByRole('textbox', { name: /temperature/i }).fill(temperature.value);
       });
 
       await test.step(`And I enter the systolic blood pressure: ${bloodPressure.systolic}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /systolic/i }).fill(bloodPressure.systolic);
+        await vitalsPage.page.getByRole('textbox', { name: /systolic/i }).fill(bloodPressure.systolic);
       });
 
       await test.step(`And I enter the diastolic blood pressure: ${bloodPressure.diastolic}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i }).fill(bloodPressure.diastolic);
+        await vitalsPage.page.getByRole('textbox', { name: /diastolic/i }).fill(bloodPressure.diastolic);
       });
 
       await test.step(`And I enter the pulse: ${pulse.value}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /pulse/i }).fill(pulse.value);
+        await vitalsPage.page.getByRole('textbox', { name: /pulse/i }).fill(pulse.value);
       });
 
       await test.step(`And I enter the respiration rate: ${respiratoryRate.value}`, async () => {
-        await vitalsPage.page.getByRole('spinbutton', { name: /respiration rate/i }).fill(respiratoryRate.value);
+        await vitalsPage.page.getByRole('textbox', { name: /respiration rate/i }).fill(respiratoryRate.value);
       });
 
       await test.step('And I click on the `Save and close` button to save the vitals', async () => {

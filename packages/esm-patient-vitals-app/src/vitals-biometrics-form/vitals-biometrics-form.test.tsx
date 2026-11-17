@@ -197,27 +197,27 @@ describe('VitalsBiometricsForm', () => {
     expect(screen.getByText(/record vitals$/i)).toBeInTheDocument();
     expect(screen.getByText(/record biometrics/i)).toBeInTheDocument();
     expect(screen.getByText(/blood pressure/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /systolic/i })).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /diastolic/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /systolic/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /diastolic/i })).toBeInTheDocument();
     expect(screen.getByText(/mmHg/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /pulse/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /pulse/i })).toBeInTheDocument();
     expect(screen.getByText(/beats\/min/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /oxygen saturation/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /oxygen saturation/i })).toBeInTheDocument();
     expect(screen.getByText(/spO2/i)).toBeInTheDocument();
     expect(screen.getByText(/%/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /respiration rate/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /respiration rate/i })).toBeInTheDocument();
     expect(screen.getByText(/breaths\/min/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /temperature/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /temperature/i })).toBeInTheDocument();
     expect(screen.getByText(/temp/i)).toBeInTheDocument();
     expect(screen.getByText(/DEG C/i)).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /notes/i })).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/type any additional notes here/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /weight/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /weight/i })).toBeInTheDocument();
     expect(screen.getByText(/^kg$/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /height/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /height/i })).toBeInTheDocument();
     expect(screen.getByText(/bmi \(calc.\)/i)).toBeInTheDocument();
     expect(screen.getByText(/kg \/ m²/i)).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /muac/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /muac/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /discard/i })).toBeInTheDocument();
     const saveButton = screen.getByRole('button', { name: /save and close/i });
     expect(saveButton).toBeInTheDocument();
@@ -229,14 +229,14 @@ describe('VitalsBiometricsForm', () => {
 
     renderVitalsAndBiometricsForm();
 
-    const heightInput = screen.getByRole('spinbutton', { name: /height/i });
-    const weightInput = screen.getByRole('spinbutton', { name: /weight/i });
-    const bmiInput = screen.getByRole('spinbutton', { name: /bmi/i });
+    const heightInput = screen.getByRole('textbox', { name: /height/i });
+    const weightInput = screen.getByRole('textbox', { name: /weight/i });
+    const bmiInput = screen.getByRole('textbox', { name: /bmi/i });
 
     await user.type(heightInput, '180');
     await user.type(weightInput, '62');
 
-    expect(bmiInput).toHaveValue(19.1);
+    expect(bmiInput).toHaveValue('19.1');
   });
 
   it('renders a success snackbar upon clicking the save button', async () => {
@@ -254,15 +254,15 @@ describe('VitalsBiometricsForm', () => {
 
     renderVitalsAndBiometricsForm();
 
-    const heightInput = screen.getByRole('spinbutton', { name: /height/i });
-    const weightInput = screen.getByRole('spinbutton', { name: /weight/i });
-    const bmiInput = screen.getByRole('spinbutton', { name: /bmi/i });
-    const systolic = screen.getByRole('spinbutton', { name: /systolic/i });
-    const pulse = screen.getByRole('spinbutton', { name: /pulse/i });
-    const oxygenSaturation = screen.getByRole('spinbutton', { name: /oxygen saturation/i });
-    const respirationRate = screen.getByRole('spinbutton', { name: /respiration rate/i });
-    const temperature = screen.getByRole('spinbutton', { name: /temperature/i });
-    const muac = screen.getByRole('spinbutton', { name: /muac/i });
+    const heightInput = screen.getByRole('textbox', { name: /height/i });
+    const weightInput = screen.getByRole('textbox', { name: /weight/i });
+    const bmiInput = screen.getByRole('textbox', { name: /bmi/i });
+    const systolic = screen.getByRole('textbox', { name: /systolic/i });
+    const pulse = screen.getByRole('textbox', { name: /pulse/i });
+    const oxygenSaturation = screen.getByRole('textbox', { name: /oxygen saturation/i });
+    const respirationRate = screen.getByRole('textbox', { name: /respiration rate/i });
+    const temperature = screen.getByRole('textbox', { name: /temperature/i });
+    const muac = screen.getByRole('textbox', { name: /muac/i });
     const saveButton = screen.getByRole('button', { name: /Save and close/i });
 
     await user.type(heightInput, heightValue.toString());
@@ -274,13 +274,13 @@ describe('VitalsBiometricsForm', () => {
     await user.type(temperature, temperatureValue.toString());
     await user.type(muac, muacValue.toString());
 
-    expect(bmiInput).toHaveValue(19.1);
-    expect(systolic).toHaveValue(120);
-    expect(pulse).toHaveValue(80);
-    expect(oxygenSaturation).toHaveValue(100);
-    expect(respirationRate).toHaveValue(16);
-    expect(temperature).toHaveValue(37);
-    expect(muac).toHaveValue(23);
+    expect(bmiInput).toHaveValue('19.1');
+    expect(systolic).toHaveValue('120');
+    expect(pulse).toHaveValue('80');
+    expect(oxygenSaturation).toHaveValue('100');
+    expect(respirationRate).toHaveValue('16');
+    expect(temperature).toHaveValue('37');
+    expect(muac).toHaveValue('23');
 
     await user.click(saveButton);
 
@@ -341,7 +341,7 @@ describe('VitalsBiometricsForm', () => {
     // Pulse is 60–100 normal, 0–230 absolute in the mock concept metadata.
     expect(screen.getByText('Normal: 60–100')).toBeInTheDocument();
 
-    const pulse = screen.getByRole('spinbutton', { name: /pulse/i });
+    const pulse = screen.getByRole('textbox', { name: /pulse/i });
     await user.type(pulse, '130');
     await user.tab();
 
@@ -379,10 +379,10 @@ describe('VitalsBiometricsForm', () => {
 
     renderVitalsAndBiometricsForm();
 
-    await user.type(screen.getByRole('spinbutton', { name: /temperature/i }), '37.5');
+    await user.type(screen.getByRole('textbox', { name: /temperature/i }), '37.5');
     expect(screen.queryByText(/enter a whole number/i)).not.toBeInTheDocument();
 
-    await user.type(screen.getByRole('spinbutton', { name: /pulse/i }), '72.5');
+    await user.type(screen.getByRole('textbox', { name: /pulse/i }), '72.5');
     expect(screen.getByText('Enter a whole number, without decimals')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /save and close/i }));
@@ -390,7 +390,7 @@ describe('VitalsBiometricsForm', () => {
     expect(mockCreateOrUpdateVitalsAndBiometrics).not.toHaveBeenCalled();
     expect(screen.getByText('Whole numbers only, without decimals: Heart rate')).toBeInTheDocument();
 
-    const pulse = screen.getByRole('spinbutton', { name: /pulse/i });
+    const pulse = screen.getByRole('textbox', { name: /pulse/i });
     await user.clear(pulse);
     await user.type(pulse, '72');
     expect(screen.queryByText(/enter a whole number/i)).not.toBeInTheDocument();
@@ -398,6 +398,95 @@ describe('VitalsBiometricsForm', () => {
     await user.click(screen.getByRole('button', { name: /save and close/i }));
 
     expect(mockCreateOrUpdateVitalsAndBiometrics).toHaveBeenCalledTimes(1);
+    vi.mocked(useConceptUnits).mockImplementation(defaultUseConceptUnits);
+  });
+
+  it.each(['36.4', '36,4'])('saves %s as 36.4, a dot or a comma as the decimal point (UVL-EMR #719)', async (typed) => {
+    const user = userEvent.setup();
+    mockCreateOrUpdateVitalsAndBiometrics.mockResolvedValue({ status: 201 } as Awaited<
+      ReturnType<typeof createOrUpdateVitalsAndBiometrics>
+    >);
+
+    renderVitalsAndBiometricsForm();
+
+    const temperature = screen.getByRole('textbox', { name: /temperature/i });
+    await user.type(temperature, typed);
+    expect(temperature).toHaveValue(typed);
+
+    await user.click(screen.getByRole('button', { name: /save and close/i }));
+
+    expect(mockCreateOrUpdateVitalsAndBiometrics).toHaveBeenCalledWith(
+      mockPatient.id,
+      mockVitalsConfig.vitals.encounterTypeUuid,
+      undefined,
+      undefined,
+      [{ concept: mockVitalsConfig.concepts.temperatureUuid, value: 36.4 }],
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it.each(['70.5', '70,5'])('saves a weight of %s as 70.5 (UVL-EMR #719)', async (typed) => {
+    const user = userEvent.setup();
+    mockCreateOrUpdateVitalsAndBiometrics.mockResolvedValue({ status: 201 } as Awaited<
+      ReturnType<typeof createOrUpdateVitalsAndBiometrics>
+    >);
+
+    renderVitalsAndBiometricsForm();
+
+    await user.type(screen.getByRole('textbox', { name: /weight/i }), typed);
+    await user.click(screen.getByRole('button', { name: /save and close/i }));
+
+    expect(mockCreateOrUpdateVitalsAndBiometrics).toHaveBeenCalledWith(
+      mockPatient.id,
+      mockVitalsConfig.vitals.encounterTypeUuid,
+      undefined,
+      undefined,
+      [{ concept: mockVitalsConfig.concepts.weightUuid, value: 70.5 }],
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('flags a temperature typed with a comma above its normal range (UVL-EMR #719)', async () => {
+    const user = userEvent.setup();
+    const actualCommon = (await vi.importActual('../common')) as {
+      assessValue: typeof assessValue;
+      getReferenceRangesForConcept: typeof getReferenceRangesForConcept;
+    };
+    vi.mocked(assessValue).mockImplementation(actualCommon.assessValue);
+    vi.mocked(getReferenceRangesForConcept).mockImplementation(actualCommon.getReferenceRangesForConcept);
+
+    renderVitalsAndBiometricsForm();
+
+    await user.type(screen.getByRole('textbox', { name: /temperature/i }), '39,5');
+    await user.tab();
+
+    expect(screen.getByTitle(/abnormal value/i)).toHaveClass('high');
+
+    vi.mocked(assessValue).mockReset();
+    vi.mocked(getReferenceRangesForConcept).mockReset();
+  });
+
+  it('refuses a pulse of 72,5 typed with a comma, as it refuses 72.5 (UVL-EMR #719)', async () => {
+    const user = userEvent.setup();
+    const defaultUseConceptUnits = vi.mocked(useConceptUnits).getMockImplementation();
+    vi.mocked(useConceptUnits).mockReturnValue({
+      conceptUnits: mockConceptUnits,
+      conceptAllowDecimal: new Map([[mockVitalsConfig.concepts.pulseUuid, false]]),
+      error: null,
+      isLoading: false,
+    });
+
+    renderVitalsAndBiometricsForm();
+
+    await user.type(screen.getByRole('textbox', { name: /pulse/i }), '72,5');
+    expect(screen.getByText('Enter a whole number, without decimals')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /save and close/i }));
+
+    expect(mockCreateOrUpdateVitalsAndBiometrics).not.toHaveBeenCalled();
+    expect(screen.getByText('Whole numbers only, without decimals: Heart rate')).toBeInTheDocument();
     vi.mocked(useConceptUnits).mockImplementation(defaultUseConceptUnits);
   });
 
@@ -423,7 +512,7 @@ describe('VitalsBiometricsForm', () => {
 
     render(<VitalsAndBiometricsForm {...defaultProps} windowProps={{ ...defaultProps.windowProps, visitContext }} />);
 
-    await user.type(screen.getByRole('spinbutton', { name: /temperature/i }), '37');
+    await user.type(screen.getByRole('textbox', { name: /temperature/i }), '37');
     await user.click(screen.getByRole('button', { name: /save and close/i }));
 
     expect(mockCreateOrUpdateVitalsAndBiometrics).toHaveBeenCalledWith(
@@ -452,7 +541,7 @@ describe('VitalsBiometricsForm', () => {
 
     renderVitalsAndBiometricsForm();
 
-    await user.type(screen.getByRole('spinbutton', { name: /temperature/i }), '37');
+    await user.type(screen.getByRole('textbox', { name: /temperature/i }), '37');
     const saveButton = screen.getByRole('button', { name: /save and close/i });
 
     await user.dblClick(saveButton);
@@ -488,7 +577,7 @@ describe('VitalsBiometricsForm', () => {
 
     renderVitalsAndBiometricsForm();
 
-    const temperatureInput = screen.getByRole('spinbutton', { name: /temperature/i });
+    const temperatureInput = screen.getByRole('textbox', { name: /temperature/i });
     await user.type(temperatureInput, '37');
     const saveButton = screen.getByRole('button', { name: /save and close/i });
     await user.click(saveButton);
@@ -501,7 +590,7 @@ describe('VitalsBiometricsForm', () => {
     });
 
     await waitFor(() => expect(saveButton).toBeEnabled());
-    expect(temperatureInput).toHaveValue(37);
+    expect(temperatureInput).toHaveValue('37');
     expect(defaultProps.closeWorkspace).not.toHaveBeenCalled();
     expect(mockShowSnackbar).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ kind: 'error' }));
 
@@ -516,15 +605,15 @@ describe('VitalsBiometricsForm', () => {
     setupMockUseEncounterVitalsAndBiometrics();
     renderVitalsAndBiometricsForm('editing', 'encounter-uuid');
 
-    expect(screen.getByRole('spinbutton', { name: /height/i })).toHaveValue(170);
-    expect(screen.getByRole('spinbutton', { name: /weight/i })).toHaveValue(65);
-    expect(screen.getByRole('spinbutton', { name: /systolic/i })).toHaveValue(120);
-    expect(screen.getByRole('spinbutton', { name: /diastolic/i })).toHaveValue(80);
-    expect(screen.getByRole('spinbutton', { name: /pulse/i })).toHaveValue(75);
-    expect(screen.getByRole('spinbutton', { name: /oxygen saturation/i })).toHaveValue(98);
-    expect(screen.getByRole('spinbutton', { name: /respiration rate/i })).toHaveValue(16);
-    expect(screen.getByRole('spinbutton', { name: /temperature/i })).toHaveValue(36.5);
-    expect(screen.getByRole('spinbutton', { name: /muac/i })).toHaveValue(25);
+    expect(screen.getByRole('textbox', { name: /height/i })).toHaveValue('170');
+    expect(screen.getByRole('textbox', { name: /weight/i })).toHaveValue('65');
+    expect(screen.getByRole('textbox', { name: /systolic/i })).toHaveValue('120');
+    expect(screen.getByRole('textbox', { name: /diastolic/i })).toHaveValue('80');
+    expect(screen.getByRole('textbox', { name: /pulse/i })).toHaveValue('75');
+    expect(screen.getByRole('textbox', { name: /oxygen saturation/i })).toHaveValue('98');
+    expect(screen.getByRole('textbox', { name: /respiration rate/i })).toHaveValue('16');
+    expect(screen.getByRole('textbox', { name: /temperature/i })).toHaveValue('36.5');
+    expect(screen.getByRole('textbox', { name: /muac/i })).toHaveValue('25');
   });
 
   it('edits patient vitals and biometrics', async () => {
@@ -543,10 +632,10 @@ describe('VitalsBiometricsForm', () => {
 
     renderVitalsAndBiometricsForm('editing', 'encounter-uuid');
 
-    const weightInput = screen.getByRole('spinbutton', { name: /weight/i });
-    const systolicInput = screen.getByRole('spinbutton', { name: /systolic/i });
-    const pulseInput = screen.getByRole('spinbutton', { name: /pulse/i });
-    const temperatureInput = screen.getByRole('spinbutton', { name: /temperature/i });
+    const weightInput = screen.getByRole('textbox', { name: /weight/i });
+    const systolicInput = screen.getByRole('textbox', { name: /systolic/i });
+    const pulseInput = screen.getByRole('textbox', { name: /pulse/i });
+    const temperatureInput = screen.getByRole('textbox', { name: /temperature/i });
     const saveButton = screen.getByRole('button', { name: /Save and close/i });
 
     // the save button should be disabled until the user makes a change
@@ -616,14 +705,14 @@ describe('VitalsBiometricsForm', () => {
 
     renderVitalsAndBiometricsForm();
 
-    const heightInput = screen.getByRole('spinbutton', { name: /height/i });
-    const weightInput = screen.getByRole('spinbutton', { name: /weight/i });
-    const systolic = screen.getByRole('spinbutton', { name: /systolic/i });
-    const pulse = screen.getByRole('spinbutton', { name: /pulse/i });
-    const oxygenSaturation = screen.getByRole('spinbutton', { name: /oxygen saturation/i });
-    const respirationRate = screen.getByRole('spinbutton', { name: /respiration rate/i });
-    const temperature = screen.getByRole('spinbutton', { name: /temperature/i });
-    const muac = screen.getByRole('spinbutton', { name: /muac/i });
+    const heightInput = screen.getByRole('textbox', { name: /height/i });
+    const weightInput = screen.getByRole('textbox', { name: /weight/i });
+    const systolic = screen.getByRole('textbox', { name: /systolic/i });
+    const pulse = screen.getByRole('textbox', { name: /pulse/i });
+    const oxygenSaturation = screen.getByRole('textbox', { name: /oxygen saturation/i });
+    const respirationRate = screen.getByRole('textbox', { name: /respiration rate/i });
+    const temperature = screen.getByRole('textbox', { name: /temperature/i });
+    const muac = screen.getByRole('textbox', { name: /muac/i });
 
     await user.type(heightInput, heightValue.toString());
     await user.type(weightInput, weightValue.toString());
@@ -675,12 +764,12 @@ describe('VitalsBiometricsForm', () => {
 
     // BMI field should not be present
     expect(screen.queryByText(/bmi \(calc.\)/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole('spinbutton', { name: /bmi/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /bmi/i })).not.toBeInTheDocument();
 
     // Other biometrics fields should still be present
-    expect(screen.getByRole('spinbutton', { name: /weight/i })).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /height/i })).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: /muac/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /weight/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /height/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /muac/i })).toBeInTheDocument();
   });
 });
 

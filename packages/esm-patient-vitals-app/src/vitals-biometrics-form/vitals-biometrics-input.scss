@@ -53,6 +53,23 @@
     padding-right: layout.$spacing-05 !important;
   }
 
+  // A text input since UVL-EMR #719 (a dot or a comma as the decimal point), styled as the number input was
+  :global(.cds--text-input) {
+    border: none !important;
+    text-align: center;
+    @include type.type-style('heading-04');
+    font-family:
+      ibm plex sans,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      '.sfnstext-regular',
+      sans-serif;
+    min-width: auto !important;
+    background-color: transparent;
+    padding: 0 layout.$spacing-03;
+  }
+
   ::placeholder {
     color: $text-03;
   }

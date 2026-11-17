@@ -20,27 +20,27 @@ test('Add, edit and delete patient vitals', async ({ page, patient }) => {
   });
 
   await test.step('When I fill `37` as the temperature', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /temperature/i }).fill('37');
+    await vitalsPage.page.getByRole('textbox', { name: /temperature/i }).fill('37');
   });
 
   await test.step('And I fill `120` as the systolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /systolic/i }).fill('120');
+    await vitalsPage.page.getByRole('textbox', { name: /systolic/i }).fill('120');
   });
 
   await test.step('And I fill `100` as the diastolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i }).fill('100');
+    await vitalsPage.page.getByRole('textbox', { name: /diastolic/i }).fill('100');
   });
 
   await test.step('And I fill `65` as the pulse', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /pulse/i }).fill('65');
+    await vitalsPage.page.getByRole('textbox', { name: /pulse/i }).fill('65');
   });
 
   await test.step('And I fill `16` as the respiration rate', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /respiration rate/i }).fill('16');
+    await vitalsPage.page.getByRole('textbox', { name: /respiration rate/i }).fill('16');
   });
 
   await test.step('And I fill `98` as the oxygen saturation', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /oxygen saturation/i }).fill('98');
+    await vitalsPage.page.getByRole('textbox', { name: /oxygen saturation/i }).fill('98');
   });
 
   await test.step('And I add additional notes', async () => {
@@ -78,27 +78,27 @@ test('Add, edit and delete patient vitals', async ({ page, patient }) => {
 
   await test.step('Then I should see the `Edit Vitals and Biometrics` form launch in the workspace', async () => {
     await expect(vitalsPage.page.getByText(/edit vitals and biometrics/i)).toBeVisible();
-    await expect(vitalsPage.page.getByRole('spinbutton', { name: /temperature/i })).toHaveValue('37');
-    await expect(vitalsPage.page.getByRole('spinbutton', { name: /systolic/i })).toHaveValue('120');
-    await expect(vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i })).toHaveValue('100');
-    await expect(vitalsPage.page.getByRole('spinbutton', { name: /pulse/i })).toHaveValue('65');
-    await expect(vitalsPage.page.getByRole('spinbutton', { name: /respiration rate/i })).toHaveValue('16');
-    await expect(vitalsPage.page.getByRole('spinbutton', { name: /oxygen saturation/i })).toHaveValue('98');
+    await expect(vitalsPage.page.getByRole('textbox', { name: /temperature/i })).toHaveValue('37');
+    await expect(vitalsPage.page.getByRole('textbox', { name: /systolic/i })).toHaveValue('120');
+    await expect(vitalsPage.page.getByRole('textbox', { name: /diastolic/i })).toHaveValue('100');
+    await expect(vitalsPage.page.getByRole('textbox', { name: /pulse/i })).toHaveValue('65');
+    await expect(vitalsPage.page.getByRole('textbox', { name: /respiration rate/i })).toHaveValue('16');
+    await expect(vitalsPage.page.getByRole('textbox', { name: /oxygen saturation/i })).toHaveValue('98');
   });
 
   await test.step('When I fill `38` as the temperature', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /temperature/i }).clear();
-    await vitalsPage.page.getByRole('spinbutton', { name: /temperature/i }).fill('38');
+    await vitalsPage.page.getByRole('textbox', { name: /temperature/i }).clear();
+    await vitalsPage.page.getByRole('textbox', { name: /temperature/i }).fill('38');
   });
 
   await test.step('And I fill `130` as the systolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /systolic/i }).clear();
-    await vitalsPage.page.getByRole('spinbutton', { name: /systolic/i }).fill('130');
+    await vitalsPage.page.getByRole('textbox', { name: /systolic/i }).clear();
+    await vitalsPage.page.getByRole('textbox', { name: /systolic/i }).fill('130');
   });
 
   await test.step('And I fill `110` as the diastolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i }).clear();
-    await vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i }).fill('110');
+    await vitalsPage.page.getByRole('textbox', { name: /diastolic/i }).clear();
+    await vitalsPage.page.getByRole('textbox', { name: /diastolic/i }).fill('110');
   });
 
   await test.step('And I click on the `Save and close` button', async () => {
@@ -161,27 +161,27 @@ test('Add low and critically low range patient vitals', async ({ page, patient }
   });
 
   await test.step('When I fill `35` as the temperature', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /temperature/i }).fill('35');
+    await vitalsPage.page.getByRole('textbox', { name: /temperature/i }).fill('35');
   });
 
   await test.step('And I fill `90` as the systolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /systolic/i }).fill('90');
+    await vitalsPage.page.getByRole('textbox', { name: /systolic/i }).fill('90');
   });
 
   await test.step('And I fill `30` as the diastolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i }).fill('30');
+    await vitalsPage.page.getByRole('textbox', { name: /diastolic/i }).fill('30');
   });
 
   await test.step('And I fill `80` as the pulse', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /pulse/i }).fill('80');
+    await vitalsPage.page.getByRole('textbox', { name: /pulse/i }).fill('80');
   });
 
   await test.step('And I fill `15` as the respiration rate', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /respiration rate/i }).fill('15');
+    await vitalsPage.page.getByRole('textbox', { name: /respiration rate/i }).fill('15');
   });
 
   await test.step('And I fill `91` as the oxygen saturation', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /oxygen saturation/i }).fill('91');
+    await vitalsPage.page.getByRole('textbox', { name: /oxygen saturation/i }).fill('91');
   });
 
   await test.step('And I add additional notes', async () => {
@@ -251,27 +251,27 @@ test('Add high and critically high range patient vitals', async ({ page, patient
   });
 
   await test.step('When I fill `38` as the temperature', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /temperature/i }).fill('38');
+    await vitalsPage.page.getByRole('textbox', { name: /temperature/i }).fill('38');
   });
 
   await test.step('And I fill `125` as the systolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /systolic/i }).fill('125');
+    await vitalsPage.page.getByRole('textbox', { name: /systolic/i }).fill('125');
   });
 
   await test.step('And I fill `78` as the diastolic', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /diastolic/i }).fill('78');
+    await vitalsPage.page.getByRole('textbox', { name: /diastolic/i }).fill('78');
   });
 
   await test.step('And I fill `200` as the pulse', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /pulse/i }).fill('200');
+    await vitalsPage.page.getByRole('textbox', { name: /pulse/i }).fill('200');
   });
 
   await test.step('And I fill `20` as the respiration rate', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /respiration rate/i }).fill('20');
+    await vitalsPage.page.getByRole('textbox', { name: /respiration rate/i }).fill('20');
   });
 
   await test.step('And I fill `91` as the oxygen saturation', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /oxygen saturation/i }).fill('91');
+    await vitalsPage.page.getByRole('textbox', { name: /oxygen saturation/i }).fill('91');
   });
 
   await test.step('And I add additional notes', async () => {
@@ -393,14 +393,14 @@ test('Show an error when saving vitals with a value outside the allowed range', 
   await test.step('And the absolute ranges should have loaded into the form', async () => {
     // The range check no-ops until the conceptreferencerange request resolves;
     // the input's max attribute is populated from that same response.
-    await expect(vitalsPage.page.getByRole('spinbutton', { name: /oxygen saturation/i })).toHaveAttribute(
+    await expect(vitalsPage.page.getByRole('textbox', { name: /oxygen saturation/i })).toHaveAttribute(
       'max',
       String(hiAbsolute),
     );
   });
 
   await test.step('When I fill `101` as the oxygen saturation', async () => {
-    await vitalsPage.page.getByRole('spinbutton', { name: /oxygen saturation/i }).fill('101');
+    await vitalsPage.page.getByRole('textbox', { name: /oxygen saturation/i }).fill('101');
   });
 
   await test.step('And I click on the `Save and close` button', async () => {
@@ -438,10 +438,10 @@ test("Vitals recorded from the visits page show up in the visit table's expanded
   });
 
   await test.step('When I fill in the vitals', async () => {
-    await page.getByRole('spinbutton', { name: /temperature/i }).fill('37');
-    await page.getByRole('spinbutton', { name: /systolic/i }).fill('120');
-    await page.getByRole('spinbutton', { name: /diastolic/i }).fill('80');
-    await page.getByRole('spinbutton', { name: /pulse/i }).fill('65');
+    await page.getByRole('textbox', { name: /temperature/i }).fill('37');
+    await page.getByRole('textbox', { name: /systolic/i }).fill('120');
+    await page.getByRole('textbox', { name: /diastolic/i }).fill('80');
+    await page.getByRole('textbox', { name: /pulse/i }).fill('65');
   });
 
   await test.step('And I click on the `Save and close` button', async () => {
