@@ -87,11 +87,11 @@ test.describe('Adding laboratory results via the Laboratory app', () => {
     });
 
     await test.step('Then the lab results form should open', async () => {
-      await expect(page.getByRole('spinbutton', { name: conceptName })).toBeVisible();
+      await expect(page.getByRole('textbox', { name: conceptName })).toBeVisible();
     });
 
     await test.step('When I fill in the result and save', async () => {
-      await page.getByRole('spinbutton', { name: conceptName }).fill('55');
+      await page.getByRole('textbox', { name: conceptName }).fill('55');
       await page.getByRole('button', { name: 'Save and close' }).click();
     });
 

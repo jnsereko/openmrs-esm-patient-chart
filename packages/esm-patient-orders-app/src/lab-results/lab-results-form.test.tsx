@@ -307,7 +307,7 @@ describe('LabResultsForm', () => {
     });
     render(<LabResultsForm {...testProps} />);
 
-    const input = screen.getByRole('spinbutton', {
+    const input = screen.getByRole('textbox', {
       name: /Test Concept/i,
     });
     await user.type(input, '50.5');
@@ -388,7 +388,7 @@ describe('LabResultsForm', () => {
     });
     render(<LabResultsForm {...testProps} />);
 
-    const input = screen.getByRole('spinbutton', {
+    const input = screen.getByRole('textbox', {
       name: /Test Concept/i,
     });
     await user.type(input, '150');
@@ -426,7 +426,7 @@ describe('LabResultsForm', () => {
     });
     render(<LabResultsForm {...testProps} />);
 
-    const input = screen.getByRole('spinbutton', {
+    const input = screen.getByRole('textbox', {
       name: /Test Concept/i,
     });
     await user.type(input, '-50');
@@ -692,6 +692,64 @@ describe('LabResultsForm', () => {
       },
       expect.anything(),
     );
+  });
+
+  // A French-locale browser empties an <input type="number"> on a typed dot ("4.5" was saved as 5): numeric
+  // results are text inputs that take a dot or a comma (UVL-EMR #727).
+  test.each([
+    ['4.5', 4.5],
+    ['4,5', 4.5],
+    ['12', 12],
+  ])('submits "%s" typed in a numeric result as %s', async (typed, expected) => {
+    const user = userEvent.setup();
+    mockUseOrderConceptByUuids.mockReturnValue({
+      concepts: [
+        {
+          uuid: 'concept-uuid',
+          display: 'Test Concept',
+          setMembers: [],
+          datatype: { display: 'Numeric', hl7Abbreviation: 'NM' } as Datatype,
+          hiAbsolute: 100,
+          lowAbsolute: 0,
+          lowCritical: null,
+          lowNormal: null,
+          hiCritical: null,
+          hiNormal: null,
+          units: 'mg/dL',
+          allowDecimal: true,
+        },
+      ] as LabOrderConcept[],
+      isLoading: false,
+      error: null,
+      isValidating: false,
+      mutate: vi.fn(),
+    });
+
+    render(<LabResultsForm {...testProps} />);
+    const input = await screen.findByRole('textbox', { name: /Test Concept/i });
+    expect(input).toHaveAttribute('inputmode', 'decimal');
+    await user.type(input, typed);
+    expect(input).toHaveValue(typed);
+    await user.click(screen.getByRole('button', { name: 'Save and close' }));
+
+    expect(updateOrderResult).toHaveBeenCalledWith(
+      'order-uuid',
+      'encounter-uuid',
+      { obs: [{ concept: { uuid: 'concept-uuid' }, order: { uuid: 'order-uuid' }, status: 'FINAL', value: expected }] },
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  test('ignores letters and a second decimal point in a numeric result', async () => {
+    const user = userEvent.setup();
+    render(<LabResultsForm {...testProps} />);
+
+    const input = await screen.findByLabelText(`Test Concept (0 - 100 mg/dL)`);
+    await user.type(input, '4a5,6.7');
+
+    expect(input).toHaveValue('45,67');
   });
 
   test('lab results forms submits correct payload when the concept is a set and one set member is keyed', async () => {
@@ -1089,7 +1147,7 @@ describe('LabResultsForm', () => {
     render(<LabResultsForm {...testProps} />);
 
     const input = await screen.findByLabelText(`Test Concept (0 - 100 mg/dL)`);
-    await waitFor(() => expect(input).toHaveValue(60));
+    await waitFor(() => expect(input).toHaveValue('60'));
     await user.clear(input);
     await user.type(input, '65');
     await user.click(screen.getByRole('button', { name: /Save and close/i }));
@@ -1202,7 +1260,7 @@ describe('LabResultsForm', () => {
 
     const firstInput = await screen.findByLabelText('First Concept (0 - 100 mg/dL)');
     const secondInput = screen.getByLabelText('Second Concept (0 - 100 mg/dL)');
-    await waitFor(() => expect(secondInput).toHaveValue(70));
+    await waitFor(() => expect(secondInput).toHaveValue('70'));
     await user.clear(firstInput);
     await user.clear(secondInput);
     await user.type(secondInput, '75');
@@ -1309,7 +1367,7 @@ describe('LabResultsForm', () => {
     });
     rerender(<LabResultsForm {...testProps} />);
 
-    await waitFor(() => expect(screen.getByLabelText(`Test Concept (0 - 100 mg/dL)`)).toHaveValue(65));
+    await waitFor(() => expect(screen.getByLabelText(`Test Concept (0 - 100 mg/dL)`)).toHaveValue('65'));
 
     mockFetchSavedLabResults.mockResolvedValueOnce([savedResult]);
     await user.click(screen.getByRole('button', { name: /Save and close/i }));

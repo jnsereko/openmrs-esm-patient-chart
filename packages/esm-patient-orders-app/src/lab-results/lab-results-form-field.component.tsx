@@ -1,18 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
-import {
-  Accordion,
-  AccordionItem,
-  InlineNotification,
-  NumberInput,
-  Select,
-  SelectItem,
-  TextInput,
-} from '@carbon/react';
+import { Accordion, AccordionItem, InlineNotification, Select, SelectItem, TextInput } from '@carbon/react';
 import { useTranslation } from 'react-i18next';
 import { type Control, Controller } from 'react-hook-form';
 import { useLayoutType } from '@openmrs/esm-framework';
 import { isCoded, isNumeric, isPanel, isText, type LabOrderConcept } from './lab-results.resource';
 import { type Observation } from '../types/encounter';
+import { DecimalTextInput } from '../components/decimal-text-input.component';
 import styles from './lab-results-form.scss';
 
 interface ResultFormFieldProps {
@@ -100,16 +93,17 @@ const ResultFormField: React.FC<ResultFormFieldProps> = ({ concept, control, def
                 value={typeof field.value === 'string' || typeof field.value === 'number' ? field.value : ''}
               />
             ) : isNumericField ? (
-              <NumberInput
-                {...field}
-                allowEmpty
-                disableWheel
+              <DecimalTextInput
+                allowNegative
+                disabled={field.disabled}
                 id={concept.uuid}
                 key={concept.uuid}
-                label={labelText}
-                onChange={(_, { value }) => field.onChange(value !== '' ? value : undefined)}
-                step={concept.allowDecimal ? 0.01 : 1}
-                value={typeof field.value === 'string' || typeof field.value === 'number' ? field.value : ''}
+                labelText={labelText}
+                name={field.name}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                ref={field.ref}
+                value={field.value}
                 invalidText={error?.message}
                 invalid={Boolean(error?.message)}
                 size={responsiveFieldSize}
