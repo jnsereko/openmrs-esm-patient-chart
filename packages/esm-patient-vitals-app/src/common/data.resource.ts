@@ -150,8 +150,9 @@ export function useVitalsConceptMetadata(patientUuid: string) {
 
 /**
  * A unit as the session's language writes it. Concept units are stored in English ("beats/min"); the ones that
- * are words get a translation key, so a French session reads « batt/min » (UVL-EMR #726). Symbols such as
- * "mmHg", "kg" or "%" are shown as stored.
+ * are words get a translation key, so a French session reads « batt/min » (UVL-EMR #726). A temperature unit
+ * stored as the bare letter ("C", or CIEL's "DEG C") is written « °C » in every language (UVL-EMR #752). Other
+ * symbols such as "mmHg", "kg" or "%" are shown as stored.
  */
 export function translateUnit(unit: string | null | undefined, t: TFunction): string | null | undefined {
   switch (unit?.trim()) {
@@ -159,6 +160,9 @@ export function translateUnit(unit: string | null | undefined, t: TFunction): st
       return t('unitBeatsPerMinute', 'beats/min');
     case 'breaths/min':
       return t('unitBreathsPerMinute', 'breaths/min');
+    case 'C':
+    case 'DEG C':
+      return '°C';
     default:
       return unit;
   }

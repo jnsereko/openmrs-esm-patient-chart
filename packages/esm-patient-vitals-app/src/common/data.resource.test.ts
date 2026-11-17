@@ -27,6 +27,12 @@ describe('translateUnit', () => {
     expect(translateUnit('beats/min', english)).toBe('beats/min');
   });
 
+  it('writes a temperature stored as the letter C as °C (UVL-EMR #752)', () => {
+    expect(translateUnit('C', french)).toBe('°C');
+    expect(translateUnit('DEG C', french)).toBe('°C');
+    expect(translateUnit('°C', french)).toBe('°C');
+  });
+
   it('shows symbols and missing units as stored', () => {
     expect(translateUnit('mmHg', french)).toBe('mmHg');
     expect(translateUnit('%', french)).toBe('%');
