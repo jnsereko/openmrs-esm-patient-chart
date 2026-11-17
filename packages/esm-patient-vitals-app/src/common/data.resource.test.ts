@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openmrsFetch, type OpenmrsResource } from '@openmrs/esm-framework';
-import { createOrUpdateVitalsAndBiometrics, getVitalsEncounterDatetime } from './data.resource';
+import { createOrUpdateVitalsAndBiometrics, getVitalsEncounterDatetime, translateUnit } from './data.resource';
 
 const mockOpenmrsFetch = vi.mocked(openmrsFetch);
 
@@ -11,6 +11,28 @@ const closedVisit = {
   startDatetime: '2026-09-20T08:00:00.000+0000',
   stopDatetime: '2026-09-20T17:00:00.000+0000',
 };
+
+describe('translateUnit', () => {
+  // A French session's translations, as i18next would answer them
+  const french = ((key: string, defaultValue: string) =>
+    ({ unitBeatsPerMinute: 'batt/min', unitBreathsPerMinute: 'resp/min' })[key] ?? defaultValue) as any;
+
+  it('writes the pulse and respiration units in the session language', () => {
+    expect(translateUnit('beats/min', french)).toBe('batt/min');
+    expect(translateUnit('breaths/min', french)).toBe('resp/min');
+  });
+
+  it('keeps the English unit when no translation exists', () => {
+    const english = ((key: string, defaultValue: string) => defaultValue) as any;
+    expect(translateUnit('beats/min', english)).toBe('beats/min');
+  });
+
+  it('shows symbols and missing units as stored', () => {
+    expect(translateUnit('mmHg', french)).toBe('mmHg');
+    expect(translateUnit('%', french)).toBe('%');
+    expect(translateUnit(null, french)).toBeNull();
+  });
+});
 
 describe('getVitalsEncounterDatetime', () => {
   const now = new Date('2026-10-01T10:00:00.000Z');

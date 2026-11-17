@@ -13,6 +13,8 @@ import {
 import useSWR from 'swr';
 import useSWRImmutable from 'swr/immutable';
 import useSWRInfinite from 'swr/infinite';
+import { type TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { type ConfigObject } from '../config-schema';
 import {
   assessValue,
@@ -146,7 +148,24 @@ export function useVitalsConceptMetadata(patientUuid: string) {
   };
 }
 
+/**
+ * A unit as the session's language writes it. Concept units are stored in English ("beats/min"); the ones that
+ * are words get a translation key, so a French session reads « batt/min » (UVL-EMR #726). Symbols such as
+ * "mmHg", "kg" or "%" are shown as stored.
+ */
+export function translateUnit(unit: string | null | undefined, t: TFunction): string | null | undefined {
+  switch (unit?.trim()) {
+    case 'beats/min':
+      return t('unitBeatsPerMinute', 'beats/min');
+    case 'breaths/min':
+      return t('unitBreathsPerMinute', 'breaths/min');
+    default:
+      return unit;
+  }
+}
+
 export function useConceptUnits() {
+  const { t } = useTranslation();
   const { concepts } = useConfig<ConfigObject>();
   const vitalSignsConceptSetUuid = concepts.vitalSignsConceptSetUuid;
 
@@ -162,7 +181,7 @@ export function useConceptUnits() {
   const conceptMetadata = data?.data?.setMembers;
 
   const conceptUnits = conceptMetadata?.length
-    ? new Map<string, string>(conceptMetadata.map((concept) => [concept.uuid, concept.units]))
+    ? new Map<string, string>(conceptMetadata.map((concept) => [concept.uuid, translateUnit(concept.units, t)]))
     : new Map<string, string>([]);
 
   // Whether each numeric vital takes decimals, as the concept says (`allowDecimal`); non-numeric members have none.

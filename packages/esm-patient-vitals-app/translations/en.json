@@ -64,6 +64,8 @@
   "temp": "Temp",
   "temperature": "Temperature",
   "temperatureAbbreviated": "Temp",
+  "unitBeatsPerMinute": "beats/min",
+  "unitBreathsPerMinute": "breaths/min",
   "unknown": "Unknown",
   "validationInputError": "Value must be between {{min}} and {{max}}",
   "viewNormalRanges": "View normal ranges",
