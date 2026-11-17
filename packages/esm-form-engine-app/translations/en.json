@@ -100,6 +100,8 @@
   "upload": "Upload",
   "uploadedPhoto": "Uploaded photo",
   "uploadImage": "Upload image",
+  "valueAboveAcceptedMaximum": "A value is above the highest accepted for its question: check the numbers entered in the form",
+  "valueBelowAcceptedMinimum": "A value is below the lowest accepted for its question: check the numbers entered in the form",
   "valueMustBeAtLeast": "Value must be at least {{min}}",
   "valueMustBeAtMost": "Value must be at most {{max}}",
   "valueNotFoundInCodedAnswers": "Value not found in coded answers list",
