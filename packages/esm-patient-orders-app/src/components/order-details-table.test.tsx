@@ -16,16 +16,16 @@ import {
   type Order,
   ErrorState,
   useOrderTypes,
-  usePatientOrders,
   useOrderBasket,
   useDrugOrderByUuid,
 } from '@openmrs/esm-patient-common-lib';
 import { configSchema } from '../config-schema';
 import { mockOrders, mockSessionDataResponse } from '__mocks__';
 import { mockPatient } from 'tools';
+import { usePatientOrdersInPeriod } from '../hooks/usePatientOrdersInPeriod';
 import OrderDetailsTable from './order-details-table.component';
 
-const mockUsePatientOrders = vi.mocked(usePatientOrders);
+const mockUsePatientOrders = vi.mocked(usePatientOrdersInPeriod);
 const mockUseOrderTypes = vi.mocked(useOrderTypes);
 const mockUseOrderBasket = vi.mocked(useOrderBasket);
 const mockOpenmrsFetch = vi.mocked(openmrsFetch);
@@ -48,13 +48,16 @@ vi.mock('@openmrs/esm-patient-common-lib', async () => {
 
   return {
     ...originalModule,
-    usePatientOrders: vi.fn(),
     useOrderTypes: vi.fn(),
     usePatient: vi.fn(),
     useOrderBasket: vi.fn(),
     useDrugOrderByUuid: vi.fn(),
   };
 });
+
+vi.mock('../hooks/usePatientOrdersInPeriod', () => ({
+  usePatientOrdersInPeriod: vi.fn(),
+}));
 
 vi.mock('./general-order-table.component', () => ({
   default: function MockGeneralOrderTable() {
@@ -316,7 +319,7 @@ describe('OrderDetailsTable', () => {
       process.env.TZ = timeZone;
     }
 
-    const [, , , startDate, endDate] = mockUsePatientOrders.mock.calls.at(-1);
+    const [, , startDate, endDate] = mockUsePatientOrders.mock.calls.at(-1);
     expect(startDate).toBe('2026-11-18T00:00:00.000+0200');
     expect(endDate).toBe('2026-11-18T23:59:59.999+0200');
   });
@@ -461,7 +464,7 @@ describe('OrderDetailsTable', () => {
     const allOrders = mockOrders;
     const testOrders = mockOrders.filter((order) => order.orderType.uuid === testOrderTypeUuid);
 
-    mockUsePatientOrders.mockImplementation((_patientUuid, _status, orderType) => {
+    mockUsePatientOrders.mockImplementation((_patientUuid, orderType) => {
       const filteredOrders =
         orderType === drugOrderTypeUuid
           ? allOrders.filter((order) => order.orderType.uuid === drugOrderTypeUuid)

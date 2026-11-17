@@ -45,11 +45,11 @@ import {
   useLaunchWorkspaceRequiringVisit,
   useOrderBasket,
   useOrderTypes,
-  usePatientOrders,
 } from '@openmrs/esm-patient-common-lib';
 import { prepMedicationOrderPostData } from '@openmrs/esm-patient-medications-app/src/api/api';
 import { prepTestOrderPostData } from '@openmrs/esm-patient-tests-app/src/test-orders/api';
 import { prepOrderPostData } from '../order-basket/general-order-type/resources';
+import { usePatientOrdersInPeriod } from '../hooks/usePatientOrdersInPeriod';
 import {
   AddIcon,
   age,
@@ -210,7 +210,7 @@ const OrderDetailsTable: React.FC<OrderDetailsProps> = ({
     error,
     isLoading,
     isValidating,
-  } = usePatientOrders(patientUuid, 'ACTIVE', selectedOrderTypeUuid, selectedFromDate, selectedToDate);
+  } = usePatientOrdersInPeriod(patientUuid, selectedOrderTypeUuid, selectedFromDate, selectedToDate);
 
   const displayedOrders = useMemo(() => allOrders ?? [], [allOrders]);
 
