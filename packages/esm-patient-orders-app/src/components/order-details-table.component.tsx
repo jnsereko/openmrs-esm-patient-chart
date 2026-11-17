@@ -73,6 +73,9 @@ import MedicationRecord from './medication-record.component';
 import PrintComponent from '../print/print.component';
 import styles from './order-details-table.scss';
 
+// The OpenMRS REST date format, e.g. 2026-11-18T00:00:00.000+0200
+const apiDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss.SSSZZ';
+
 interface OrderDetailsProps {
   patientUuid: string;
   patient: fhir.Patient;
@@ -143,9 +146,17 @@ const OrderDetailsTable: React.FC<OrderDetailsProps> = ({
   // UI-controlled date range
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([new Date(), new Date()]);
   // Derived API filter dates (ISO strings)
+  // UVL-EMR #760: the first and last instants of the local days, with their UTC offset. A date-only
+  // string is read as a day of the server's time zone, which drops orders placed just after local midnight.
   const [startDate, endDate] = dateRange;
-  const selectedFromDate = useMemo(() => (startDate ? dayjs(startDate).format('YYYY-MM-DD') : null), [startDate]);
-  const selectedToDate = useMemo(() => (endDate ? dayjs(endDate).format('YYYY-MM-DD') : null), [endDate]);
+  const selectedFromDate = useMemo(
+    () => (startDate ? dayjs(startDate).startOf('day').format(apiDateTimeFormat) : null),
+    [startDate],
+  );
+  const selectedToDate = useMemo(
+    () => (endDate ? dayjs(endDate).endOf('day').format(apiDateTimeFormat) : null),
+    [endDate],
+  );
 
   const selectedOrderType = orderTypes?.find((x) => x.uuid === selectedOrderTypeUuid);
 

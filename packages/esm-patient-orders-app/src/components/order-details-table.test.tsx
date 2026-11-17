@@ -301,6 +301,26 @@ describe('OrderDetailsTable', () => {
     expect(screen.getByDisplayValue(/\d{2}\/\d{2}\/\d{4}–\d{2}\/\d{2}\/\d{4}/)).toBeInTheDocument();
   });
 
+  it("asks for the orders of today's local day as datetimes, so an order placed just after local midnight is included (UVL-EMR #760)", async () => {
+    // 00:30 in Burundi (UTC+2) is still the previous day in UTC, the server's time zone
+    const timeZone = process.env.TZ;
+    process.env.TZ = 'Africa/Bujumbura';
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-17T22:30:00.000Z'));
+
+    try {
+      renderOrderDetailsTable();
+      await screen.findByRole('table');
+    } finally {
+      vi.useRealTimers();
+      process.env.TZ = timeZone;
+    }
+
+    const [, , , startDate, endDate] = mockUsePatientOrders.mock.calls.at(-1);
+    expect(startDate).toBe('2026-11-18T00:00:00.000+0200');
+    expect(endDate).toBe('2026-11-18T23:59:59.999+0200');
+  });
+
   it('renders priority tags for each urgency level', async () => {
     const ordersWithPriorities = [
       { ...mockOrders[0], uuid: 'routine-order', orderNumber: 'ORD-R', urgency: 'ROUTINE' },
