@@ -25,6 +25,7 @@ import type { ConfigObject } from '../config-schema';
 import type { VitalsTableHeader, VitalsTableRow } from './types';
 import { useLaunchVitalsAndBiometricsForm } from '../utils';
 import { useVitalsAndBiometrics, useConceptUnits, withUnit } from '../common';
+import { formatDecimal } from '../common/helpers';
 import PaginatedVitals from './paginated-vitals.component';
 import PrintComponent from './print/print.component';
 import styles from './vitals-overview.scss';
@@ -153,15 +154,15 @@ const VitalsOverview: React.FC<VitalsOverviewProps> = ({ patientUuid, patient, p
         return {
           ...vitalSigns,
           dateRender: formatDate(parseDate(vitalSigns.date.toString()), { mode: 'wide', time: true }),
-          bloodPressureRender: `${vitalSigns.systolic ?? '--'} / ${vitalSigns.diastolic ?? '--'}`,
+          bloodPressureRender: `${formatDecimal(vitalSigns.systolic) ?? '--'} / ${formatDecimal(vitalSigns.diastolic) ?? '--'}`,
           bloodPressureRenderInterpretation: vitalSigns.bloodPressureRenderInterpretation,
-          pulseRender: vitalSigns.pulse ?? '--',
+          pulseRender: formatDecimal(vitalSigns.pulse) ?? '--',
           pulseRenderInterpretation: vitalSigns.pulseRenderInterpretation,
-          spo2Render: vitalSigns.spo2 ?? '--',
+          spo2Render: formatDecimal(vitalSigns.spo2) ?? '--',
           spo2RenderInterpretation: vitalSigns.spo2RenderInterpretation,
-          temperatureRender: vitalSigns.temperature ?? '--',
+          temperatureRender: formatDecimal(vitalSigns.temperature) ?? '--',
           temperatureRenderInterpretation: vitalSigns.temperatureRenderInterpretation,
-          respiratoryRateRender: vitalSigns.respiratoryRate ?? '--',
+          respiratoryRateRender: formatDecimal(vitalSigns.respiratoryRate) ?? '--',
           respiratoryRateRenderInterpretation: vitalSigns.respiratoryRateRenderInterpretation,
         };
       }),

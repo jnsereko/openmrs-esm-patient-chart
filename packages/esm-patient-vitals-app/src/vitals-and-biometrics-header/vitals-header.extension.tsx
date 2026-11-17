@@ -13,7 +13,7 @@ import { type ConfigObject } from '../config-schema';
 import { useLaunchVitalsAndBiometricsForm } from '../utils';
 import VitalsHeaderItem from './vitals-header-item.component';
 import styles from './vitals-header.scss';
-import { shouldShowBmi } from '../common/helpers';
+import { formatDecimal, shouldShowBmi } from '../common/helpers';
 
 interface VitalsHeaderProps {
   patientUuid: string;
@@ -116,11 +116,11 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
 
     const formatRange = (range: { lowNormal: number | null; hiNormal: number | null }) =>
       range.lowNormal != null && range.hiNormal != null
-        ? `${range.lowNormal}–${range.hiNormal}`
+        ? `${formatDecimal(range.lowNormal)}–${formatDecimal(range.hiNormal)}`
         : range.lowNormal != null
-          ? `≥ ${range.lowNormal}`
+          ? `≥ ${formatDecimal(range.lowNormal)}`
           : range.hiNormal != null
-            ? `≤ ${range.hiNormal}`
+            ? `≤ ${formatDecimal(range.hiNormal)}`
             : '–';
 
     const sysRange = conceptRangeMap?.get(config.concepts.systolicBloodPressureUuid);
@@ -242,7 +242,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
               unitSymbol={
                 latestVitals?.systolic != null ? conceptUnits.get(config.concepts.systolicBloodPressureUuid) ?? '' : ''
               }
-              value={`${latestVitals?.systolic ?? '--'} / ${latestVitals?.diastolic ?? '--'}`}
+              value={`${formatDecimal(latestVitals?.systolic) ?? '--'} / ${formatDecimal(latestVitals?.diastolic) ?? '--'}`}
             />
             <VitalsHeaderItem
               conceptUuid={config.concepts.pulseUuid}
@@ -250,7 +250,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
               patientUuid={patientUuid}
               unitName={t('heartRate', 'Heart rate')}
               unitSymbol={latestVitals?.pulse != null ? conceptUnits.get(config.concepts.pulseUuid) ?? '' : ''}
-              value={latestVitals?.pulse ?? '--'}
+              value={formatDecimal(latestVitals?.pulse) ?? '--'}
             />
             <VitalsHeaderItem
               conceptUuid={config.concepts.respiratoryRateUuid}
@@ -260,7 +260,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
               unitSymbol={
                 latestVitals?.respiratoryRate != null ? conceptUnits.get(config.concepts.respiratoryRateUuid) ?? '' : ''
               }
-              value={latestVitals?.respiratoryRate ?? '--'}
+              value={formatDecimal(latestVitals?.respiratoryRate) ?? '--'}
             />
             <VitalsHeaderItem
               conceptUuid={config.concepts.oxygenSaturationUuid}
@@ -270,7 +270,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
               unitSymbol={
                 latestVitals?.spo2 != null ? conceptUnits.get(config.concepts.oxygenSaturationUuid) ?? '' : ''
               }
-              value={latestVitals?.spo2 ?? '--'}
+              value={formatDecimal(latestVitals?.spo2) ?? '--'}
             />
             <VitalsHeaderItem
               conceptUuid={config.concepts.temperatureUuid}
@@ -280,26 +280,26 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
               unitSymbol={
                 latestVitals?.temperature != null ? conceptUnits.get(config.concepts.temperatureUuid) ?? '' : ''
               }
-              value={latestVitals?.temperature ?? '--'}
+              value={formatDecimal(latestVitals?.temperature) ?? '--'}
             />
             <VitalsHeaderItem
               patientUuid={patientUuid}
               unitName={t('weight', 'Weight')}
               unitSymbol={latestVitals?.weight != null ? conceptUnits.get(config.concepts.weightUuid) ?? '' : ''}
-              value={latestVitals?.weight ?? '--'}
+              value={formatDecimal(latestVitals?.weight) ?? '--'}
             />
             <VitalsHeaderItem
               patientUuid={patientUuid}
               unitName={t('height', 'Height')}
               unitSymbol={latestVitals?.height != null ? conceptUnits.get(config.concepts.heightUuid) ?? '' : ''}
-              value={latestVitals?.height ?? '--'}
+              value={formatDecimal(latestVitals?.height) ?? '--'}
             />
             {showBmi && (
               <VitalsHeaderItem
                 patientUuid={patientUuid}
                 unitName={t('bmi', 'BMI')}
                 unitSymbol={latestVitals?.bmi != null ? config.biometrics['bmiUnit'] ?? '' : ''}
-                value={latestVitals?.bmi ?? '--'}
+                value={formatDecimal(latestVitals?.bmi) ?? '--'}
               />
             )}
             {latestVitals?.muac != null && (
@@ -309,7 +309,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({
                 unitSymbol={
                   latestVitals?.muac != null ? conceptUnits.get(config.concepts.midUpperArmCircumferenceUuid) ?? '' : ''
                 }
-                value={latestVitals?.muac ?? '--'}
+                value={formatDecimal(latestVitals?.muac) ?? '--'}
               />
             )}
           </div>

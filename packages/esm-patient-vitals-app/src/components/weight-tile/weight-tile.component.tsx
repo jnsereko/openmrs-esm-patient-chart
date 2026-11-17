@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { InlineLoading } from '@carbon/react';
 import { useConfig } from '@openmrs/esm-framework';
 import { useVitalsAndBiometrics, useConceptUnits } from '../../common';
+import { formatDecimal } from '../../common/helpers';
 import { type ConfigObject } from '../../config-schema';
 import styles from './weight-tile.scss';
 
@@ -26,7 +27,7 @@ const WeightTile: React.FC<WeightTileInterface> = ({ patientUuid }) => {
       <div>
         <p className={styles.label}>{t('weight', 'Weight')}</p>
         <p className={styles.content}>
-          <span className={styles.value}>{weightData?.[0]?.weight}</span>{' '}
+          <span className={styles.value}>{formatDecimal(weightData?.[0]?.weight)}</span>{' '}
           {conceptUnits.get(config.concepts.weightUuid) ?? ''}
         </p>
       </div>

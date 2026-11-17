@@ -13,7 +13,7 @@ import { formatDatetime, parseDate, useConfig, useLayoutType } from '@openmrs/es
 import { CardHeader, EmptyState, ErrorState } from '@openmrs/esm-patient-common-lib';
 import { useLaunchVitalsAndBiometricsForm } from '../utils';
 import { useConceptUnits, useVitalsAndBiometrics, withUnit } from '../common';
-import { shouldShowBmi } from '../common/helpers';
+import { formatDecimal, shouldShowBmi } from '../common/helpers';
 import { type ConfigObject } from '../config-schema';
 import type { BiometricsTableHeader, BiometricsTableRow } from './types';
 import PaginatedBiometrics from './paginated-biometrics.component';
@@ -96,10 +96,10 @@ const BiometricsBase: React.FC<BiometricsBaseProps> = ({ patientUuid, patient, p
         return {
           ...biometricsData,
           dateRender: formatDatetime(parseDate(biometricsData.date.toString()), { mode: 'wide' }),
-          weightRender: biometricsData.weight ?? '--',
-          heightRender: biometricsData.height ?? '--',
-          bmiRender: showBmi ? biometricsData.bmi ?? '--' : '--',
-          muacRender: biometricsData.muac ?? '--',
+          weightRender: formatDecimal(biometricsData.weight) ?? '--',
+          heightRender: formatDecimal(biometricsData.height) ?? '--',
+          bmiRender: showBmi ? formatDecimal(biometricsData.bmi) ?? '--' : '--',
+          muacRender: formatDecimal(biometricsData.muac) ?? '--',
         };
       }),
     [biometrics, showBmi],

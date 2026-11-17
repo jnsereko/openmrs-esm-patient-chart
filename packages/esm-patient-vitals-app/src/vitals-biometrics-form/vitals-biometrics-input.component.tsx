@@ -6,6 +6,7 @@ import { Warning } from '@carbon/react/icons';
 import { useTranslation } from 'react-i18next';
 import { useLayoutType, ResponsiveWrapper } from '@openmrs/esm-framework';
 import { generatePlaceholder } from '../common';
+import { formatDecimal } from '../common/helpers';
 import { type VitalsBiometricsFormData } from './schema';
 import styles from './vitals-biometrics-input.scss';
 
@@ -28,13 +29,13 @@ type NormalRange = { lowNormal?: number | null; hiNormal?: number | null };
 
 function formatNormalRange(range?: NormalRange | null) {
   if (range?.lowNormal != null && range?.hiNormal != null) {
-    return `${range.lowNormal}–${range.hiNormal}`;
+    return `${formatDecimal(range.lowNormal)}–${formatDecimal(range.hiNormal)}`;
   }
   if (range?.lowNormal != null) {
-    return `≥ ${range.lowNormal}`;
+    return `≥ ${formatDecimal(range.lowNormal)}`;
   }
   if (range?.hiNormal != null) {
-    return `≤ ${range.hiNormal}`;
+    return `≤ ${formatDecimal(range.hiNormal)}`;
   }
   return null;
 }
@@ -81,16 +82,19 @@ interface DecimalTextInputProps {
   value: unknown;
 }
 
-/** A number field typed as text: keeps what is typed ("36," on the way to "36,4") and reports the number. */
+/**
+ * A number field typed as text: keeps what is typed ("36," on the way to "36,4") and reports the number. A value
+ * the form sets is written with the session's decimal mark, « 36,4 » in French (UVL-EMR #723).
+ */
 function DecimalTextInput({ inputRef, onChange, value, ...inputProps }: DecimalTextInputProps) {
-  const [text, setText] = useState(() => (toNumber(value) === undefined ? '' : String(toNumber(value))));
+  const [text, setText] = useState(() => formatDecimal(toNumber(value)) ?? '');
 
   // The form set another value (an encounter being edited, the computed BMI): show it, unless the text
   // already means it.
   useEffect(() => {
     setText((current) => {
       const number = toNumber(value);
-      return parseDecimalText(current) === number ? current : number === undefined ? '' : String(number);
+      return parseDecimalText(current) === number ? current : formatDecimal(number) ?? '';
     });
   }, [value]);
 
@@ -307,8 +311,8 @@ const VitalsAndBiometricsInput: React.FC<VitalsAndBiometricsInputProps> = ({
         showInvalidInputError && (
           <FormLabel className={styles.invalidInputError}>
             {t('validationInputError', `Value must be between {{min}} and {{max}}`, {
-              min: fieldProperties[0].min,
-              max: fieldProperties[0].max,
+              min: formatDecimal(fieldProperties[0].min),
+              max: formatDecimal(fieldProperties[0].max),
             })}
           </FormLabel>
         )

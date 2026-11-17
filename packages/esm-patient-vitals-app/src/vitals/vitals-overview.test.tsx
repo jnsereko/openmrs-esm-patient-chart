@@ -2,7 +2,7 @@ import React from 'react';
 import { vi, describe, it, expect, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor, within } from '@testing-library/react';
-import { getDefaultsFromConfigSchema, useConfig } from '@openmrs/esm-framework';
+import { getDefaultsFromConfigSchema, getLocale, useConfig } from '@openmrs/esm-framework';
 import { ErrorState } from '@openmrs/esm-patient-common-lib';
 import { type ConfigObject, configSchema } from '../config-schema';
 import { formattedVitals, mockConceptUnits, mockVitalsConfig } from '__mocks__';
@@ -116,6 +116,22 @@ describe('VitalsOverview', () => {
       /08 .* Apr .* 2021, .* 36.5 -- \/ -- 78 65 --/,
     ];
     expectedTableRows.map((row) => expect(screen.getByRole('row', { name: new RegExp(row, 'i') })).toBeInTheDocument());
+  });
+
+  it('writes decimals with a comma in a French session (UVL-EMR #723)', async () => {
+    vi.mocked(getLocale).mockReturnValue('fr');
+    mockUseVitalsAndBiometrics.mockReturnValue({
+      data: formattedVitals,
+    } as ReturnType<typeof useVitalsAndBiometrics>);
+
+    try {
+      renderWithSwr(<VitalsOverview {...testProps} />);
+      await waitForLoadingToFinish();
+
+      expect(screen.getByRole('row', { name: /08 .* Apr .* 2021, .* 36,5 -- \/ -- 78 65 --/i })).toBeInTheDocument();
+    } finally {
+      vi.mocked(getLocale).mockReturnValue('en');
+    }
   });
 
   it('sorts the vitals table in the direction indicated by the column header', async () => {

@@ -1,4 +1,4 @@
-import { assessValue, interpretBloodPressure, prepareObsForSubmission } from './helpers';
+import { assessValue, formatDecimal, interpretBloodPressure, prepareObsForSubmission } from './helpers';
 import { vi, describe, it, expect } from 'vitest';
 import type { ObsReferenceRanges } from './types';
 import type { VitalsAndBiometricsFieldValuesMap } from './data.resource';
@@ -11,6 +11,37 @@ const temperatureRange: ObsReferenceRanges = {
   lowCritical: 35,
   lowAbsolute: 25,
 };
+
+describe('formatDecimal', () => {
+  it('writes the decimal mark of the session language', () => {
+    expect(formatDecimal(36.4, 'fr')).toBe('36,4');
+    expect(formatDecimal(36.4, 'en')).toBe('36.4');
+    expect(formatDecimal(23.8, 'fr-BI')).toBe('23,8');
+  });
+
+  it('keeps the digits as they are, without rounding or grouping', () => {
+    expect(formatDecimal(37, 'fr')).toBe('37');
+    expect(formatDecimal(1250.75, 'fr')).toBe('1250,75');
+    expect(formatDecimal(0.125, 'fr')).toBe('0,125');
+    expect(formatDecimal('37.7', 'fr')).toBe('37,7');
+    expect(formatDecimal('26.0', 'fr')).toBe('26,0');
+  });
+
+  it('leaves placeholders alone and returns undefined for no value', () => {
+    expect(formatDecimal('--', 'fr')).toBe('--');
+    expect(formatDecimal(null, 'fr')).toBeUndefined();
+    expect(formatDecimal(undefined, 'fr')).toBeUndefined();
+    expect(formatDecimal('', 'fr')).toBeUndefined();
+  });
+
+  it('falls back to a dot for a language tag Intl does not take', () => {
+    expect(formatDecimal(36.4, 'not a locale')).toBe('36.4');
+  });
+
+  it("uses the session's locale by default", () => {
+    expect(formatDecimal(36.4)).toBe('36.4');
+  });
+});
 
 describe('assessValue', () => {
   it('returns "normal" when no range is provided', () => {

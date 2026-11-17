@@ -12,6 +12,7 @@ export {
 export {
   assessValue,
   calculateBodyMassIndex,
+  formatDecimal,
   generatePlaceholder,
   getReferenceRangesForConcept,
   interpretBloodPressure,

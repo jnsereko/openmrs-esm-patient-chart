@@ -6,7 +6,13 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import dayjs from 'dayjs';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { getDefaultsFromConfigSchema, NumericObservation, useConfig, useVisit } from '@openmrs/esm-framework';
+import {
+  getDefaultsFromConfigSchema,
+  getLocale,
+  NumericObservation,
+  useConfig,
+  useVisit,
+} from '@openmrs/esm-framework';
 import { mockPatient, getByTextWithMarkup, renderWithSwr, waitForLoadingToFinish } from 'tools';
 import {
   formattedVitals,
@@ -143,6 +149,41 @@ describe('VitalsHeader', () => {
     expect(getByTextWithMarkup(/Weight\s*-\s*/i)).toBeInTheDocument();
     expect(getByTextWithMarkup(/MUAC\s*23\s*cm/i)).toBeInTheDocument();
     expect(getByTextWithMarkup(/these vitals are out of date/i)).toBeInTheDocument();
+  });
+
+  it('writes decimals with a comma in a French session (UVL-EMR #723)', async () => {
+    vi.mocked(getLocale).mockReturnValue('fr');
+    mockUseVitalsAndBiometrics.mockReturnValue({
+      data: [
+        {
+          id: '0',
+          date: '2021-05-19T04:26:51.000Z',
+          pulse: 76,
+          temperature: 36.4,
+          respiratoryRate: 12,
+          diastolic: 89,
+          systolic: 121,
+          weight: 62.5,
+          height: 162,
+          bmi: 23.8,
+          muac: 23,
+          bloodPressureRenderInterpretation: 'normal',
+        },
+      ],
+    } as ReturnType<typeof useVitalsAndBiometrics>);
+
+    try {
+      renderWithSwr(<VitalsHeader {...testProps} />);
+      await waitForLoadingToFinish();
+
+      expect(getByTextWithMarkup(/Temp\s*36,4\s*DEG C/i)).toBeInTheDocument();
+      expect(getByTextWithMarkup(/Weight\s*62,5\s*kg/i)).toBeInTheDocument();
+      expect(getByTextWithMarkup(/BMI\s*23,8/i)).toBeInTheDocument();
+      expect(getByTextWithMarkup(/BP\s*121 \/ 89\s*mmHg/i)).toBeInTheDocument();
+      expect(screen.queryByText(/36\.4|62\.5|23\.8/)).not.toBeInTheDocument();
+    } finally {
+      vi.mocked(getLocale).mockReturnValue('en');
+    }
   });
 
   it('launches the vitals form when the `record vitals` button is clicked', async () => {

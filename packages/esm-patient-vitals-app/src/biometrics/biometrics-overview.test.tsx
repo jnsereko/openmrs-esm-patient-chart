@@ -3,7 +3,7 @@ import React from 'react';
 import dayjs from 'dayjs';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor } from '@testing-library/react';
-import { getDefaultsFromConfigSchema, NumericObservation, useConfig } from '@openmrs/esm-framework';
+import { getDefaultsFromConfigSchema, getLocale, NumericObservation, useConfig } from '@openmrs/esm-framework';
 import { ErrorState } from '@openmrs/esm-patient-common-lib';
 import { formattedBiometrics, mockBiometricsConfig, mockConceptUnits } from '__mocks__';
 import { configSchema, type ConfigObject } from '../config-schema';
@@ -315,7 +315,7 @@ describe('Biometrics Overview', () => {
 
     expect(mockNumericObservation).toHaveBeenCalledWith(
       expect.objectContaining({
-        value: 17,
+        value: '17',
         interpretation: 'critically_low',
         conceptUuid: defaults.concepts.bodyMassIndexUuid,
         variant: 'cell',
@@ -325,12 +325,38 @@ describe('Biometrics Overview', () => {
     );
     expect(mockNumericObservation).toHaveBeenCalledWith(
       expect.objectContaining({
-        value: 90,
+        value: '90',
         conceptUuid: defaults.concepts.weightUuid,
         variant: 'cell',
       }),
       expect.anything(),
     );
+  });
+
+  it('writes decimals with a comma in a French session (UVL-EMR #723)', async () => {
+    vi.mocked(getLocale).mockReturnValue('fr');
+    mockUseVitalsAndBiometrics.mockReturnValue({
+      data: [
+        {
+          id: 'enc-1',
+          date: '2021-08-12T00:00:00.000Z',
+          weight: 62.5,
+          height: 162,
+          bmi: 23.8,
+          bmiRenderInterpretation: 'normal',
+          muac: 23,
+        },
+      ],
+    } as ReturnType<typeof useVitalsAndBiometrics>);
+
+    try {
+      renderWithSwr(<BiometricsOverview {...testProps} />);
+      await waitForLoadingToFinish();
+
+      expect(screen.getByRole('row', { name: /12 — Aug — 2021, 12:00 AM 62,5 162 23,8 23/i })).toBeInTheDocument();
+    } finally {
+      vi.mocked(getLocale).mockReturnValue('en');
+    }
   });
 
   it('shows BMI column for a 20-month-old patient when bmiMinimumAge is 1', async () => {

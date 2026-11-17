@@ -4,6 +4,7 @@ import { act, screen, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   type FetchResponse,
+  getLocale,
   showSnackbar,
   useConfig,
   useSession,
@@ -237,6 +238,22 @@ describe('VitalsBiometricsForm', () => {
     await user.type(weightInput, '62');
 
     expect(bmiInput).toHaveValue('19.1');
+  });
+
+  it('shows the computed BMI with a comma in a French session (UVL-EMR #723)', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getLocale).mockReturnValue('fr');
+
+    try {
+      renderVitalsAndBiometricsForm();
+
+      await user.type(screen.getByRole('textbox', { name: /height/i }), '180');
+      await user.type(screen.getByRole('textbox', { name: /weight/i }), '62,5');
+
+      expect(screen.getByRole('textbox', { name: /bmi/i })).toHaveValue('19,3');
+    } finally {
+      vi.mocked(getLocale).mockReturnValue('en');
+    }
   });
 
   it('renders a success snackbar upon clicking the save button', async () => {

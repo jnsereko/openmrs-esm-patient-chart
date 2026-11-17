@@ -1,11 +1,37 @@
 import dayjs from 'dayjs';
-import { type OpenmrsResource } from '@openmrs/esm-framework';
+import { getLocale, type OpenmrsResource } from '@openmrs/esm-framework';
 
 import { type ConceptMetadata } from '../common';
 import type { FHIRInterpretation, ObsReferenceRanges, ObservationInterpretation } from './types';
 import { type VitalsBiometricsFormData } from '../vitals-biometrics-form/schema';
 import { type VitalsAndBiometricsFieldValuesMap } from './data.resource';
 import { type BiometricsConfigObject } from '../config-schema';
+
+/**
+ * A measured value as the session's language writes it: « 36,4 » in French, "36.4" in English. The fields
+ * take a dot or a comma (UVL-EMR #719); what is shown follows the session language (UVL-EMR #723). Only the
+ * decimal mark changes: the digits are those JavaScript writes, without grouping. A value that is not a number
+ * ("--") is returned as it is, and an empty one as undefined so that `??` can supply a placeholder.
+ */
+export function formatDecimal(value: number | string | null | undefined, locale?: string): string | undefined {
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+  const text = typeof value === 'number' ? String(value) : value.trim();
+  if (text === '' || !Number.isFinite(Number(text))) {
+    return value as string;
+  }
+  return text.replace('.', getDecimalSeparator(locale ?? getLocale()));
+}
+
+function getDecimalSeparator(locale: string | undefined) {
+  try {
+    return new Intl.NumberFormat(locale).formatToParts(1.5).find((part) => part.type === 'decimal')?.value ?? '.';
+  } catch {
+    // A language tag Intl does not take
+    return '.';
+  }
+}
 
 export function calculateBodyMassIndex(weight: number, height: number) {
   if (weight > 0 && height > 0) {
