@@ -14,6 +14,13 @@ export const configSchema = {
       "Encounter types (uuids) whose new encounters are filed at the user's session location. Every other new encounter is filed at its visit's location, or at the session location when the visit has none. A form's own encounter location field always wins, and an edited encounter keeps its location.",
     _default: [],
   },
+  excludedProviderIdentifiers: {
+    _type: Type.Array,
+    _elements: { _type: Type.String },
+    _description:
+      "Identifiers of the providers that form provider fields never offer, such as service accounts and the admin user. An entry ending with '*' matches every identifier it starts (e.g. 'service-account-*').",
+    _default: [],
+  },
   phq9Concepts: {
     _type: Type.Object,
     _description: 'PHQ-9 concept UUIDs for score calculation',
@@ -29,6 +36,7 @@ export const configSchema = {
 export interface ConfigObject {
   hideUnansweredQuestionsInReadonlyForms: boolean;
   sessionLocationEncounterTypes: Array<string>;
+  excludedProviderIdentifiers: Array<string>;
   phq9Concepts: {
     notAtAll: string;
     severalDays: string;
