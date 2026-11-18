@@ -86,14 +86,20 @@ function renderAddLabOrderWorkspace() {
   );
 }
 
-mockUseConfig.mockReturnValue({
+const baseConfig = {
   ...getDefaultsFromConfigSchema(configSchema),
   orders: {
     labOrderTypeUuid: 'test-lab-order-type-uuid',
     labOrderableConcepts: [],
   },
   additionalTestOrderTypes: [],
+} as ConfigObject;
+
+beforeEach(() => {
+  mockUseConfig.mockReturnValue(baseConfig);
 });
+
+mockUseConfig.mockReturnValue(baseConfig);
 
 mockUseSession.mockReturnValue(mockSessionDataResponse.data);
 
@@ -209,12 +215,32 @@ describe('AddLabOrder', () => {
       expect(hookResult.current.orders).toEqual([
         {
           ...createEmptyLabOrder(mockTestTypes[0], mockSessionDataResponse.data.currentProvider.uuid, null),
-          isOrderIncomplete: true,
+          isOrderIncomplete: false,
         },
       ]);
     });
 
     expect(mockCloseWorkspace).toHaveBeenCalled();
+  });
+
+  test('a test that requires an order reason is added as incomplete', async () => {
+    const user = userEvent.setup();
+    mockUseConfig.mockReturnValue({
+      ...baseConfig,
+      labTestsWithOrderReasons: [{ labTestUuid: mockTestTypes[0].conceptUuid, required: true, orderReasons: [] }],
+    } as ConfigObject);
+    const { result: hookResult } = renderHook(() =>
+      useOrderBasket(mockPatient, 'test-lab-order-type-uuid', ((x) => x) as unknown as PostDataPrepFunction),
+    );
+    renderAddLabOrderWorkspace();
+    await user.type(screen.getByRole('searchbox'), 'cd4');
+    await screen.findByText('CD4 COUNT');
+
+    await user.click(screen.getByRole('button', { name: /add to basket/i }));
+
+    await waitFor(() => {
+      expect(hookResult.current.orders[0].isOrderIncomplete).toBe(true);
+    });
   });
 
   test('discarding a new order returns to test type search', async () => {

@@ -8,12 +8,14 @@ import {
   ResponsiveWrapper,
   ShoppingCartArrowDownIcon,
   useDebounce,
+  useConfig,
   useLayoutType,
   useSession,
   type Visit,
   type Workspace2DefinitionProps,
 } from '@openmrs/esm-framework';
 import { useOrderBasket, type TestOrderBasketItem } from '@openmrs/esm-patient-common-lib';
+import { type ConfigObject } from '../../config-schema';
 import { prepTestOrderPostData } from '../api';
 import { createEmptyLabOrder } from './test-order';
 import { useActiveTestOrders } from './useActiveTestOrders';
@@ -224,6 +226,7 @@ const TestTypeSearchResultItem: React.FC<TestTypeSearchResultItemProps> = ({
   const { t } = useTranslation();
   const isTablet = useLayoutType() === 'tablet';
   const session = useSession();
+  const config = useConfig<ConfigObject>();
   const { orders, setOrders } = useOrderBasket<TestOrderBasketItem>(patient, orderTypeUuid, prepTestOrderPostData);
 
   const testTypeAlreadyInBasket = useMemo(
@@ -244,10 +247,13 @@ const TestTypeSearchResultItem: React.FC<TestTypeSearchResultItemProps> = ({
 
   const addToBasket = useCallback(() => {
     const labOrder = createLabOrder(testType);
-    labOrder.isOrderIncomplete = true;
+    // The order starts with a priority, so it only has to be opened when this test requires an order reason
+    labOrder.isOrderIncomplete = Boolean(
+      config.labTestsWithOrderReasons?.some((c) => c.labTestUuid === testType.conceptUuid && c.required),
+    );
     setOrders([...orders, labOrder]);
     closeWorkspace({ discardUnsavedChanges: true });
-  }, [orders, setOrders, createLabOrder, testType, closeWorkspace]);
+  }, [orders, setOrders, createLabOrder, testType, closeWorkspace, config.labTestsWithOrderReasons]);
 
   const removeFromBasket = useCallback(() => {
     setOrders(orders.filter((order) => order.testType.conceptUuid !== testType.conceptUuid));
