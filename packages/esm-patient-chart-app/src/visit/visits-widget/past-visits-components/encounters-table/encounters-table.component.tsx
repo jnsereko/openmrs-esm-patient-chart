@@ -56,6 +56,7 @@ import {
 } from './encounters-table.resource';
 import EncounterObservations from '../../encounter-observations';
 import styles from './encounters-table.scss';
+import { paginationLabels } from '../../../../uvl/pagination-labels';
 
 /**
  * This component is used by the AllEncountersTable and the completed forms tables to display
@@ -370,8 +371,7 @@ const EncountersTable: React.FC<EncountersTableProps> = ({
       </DataTable>
       {
         <Pagination
-          forwardText={t('nextPage', 'Next page')}
-          backwardText={t('previousPage', 'Previous page')}
+          {...paginationLabels(t)}
           page={currentPage}
           pageSize={pageSize}
           pageSizes={pageSizes}

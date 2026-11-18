@@ -24,6 +24,7 @@ import VisitDiagnosisCell from './visit-diagnoses-cell.component';
 import VisitSummary from '../visits-widget/past-visits-components/visit-summary.component';
 import VisitTypeCell from './visit-type-cell.component';
 import styles from './visit-history-table.scss';
+import { paginationLabels } from '../../uvl/pagination-labels';
 
 interface VisitHistoryTableProps {
   patientUuid: string;
@@ -122,8 +123,7 @@ const VisitHistoryTable: React.FC<VisitHistoryTableProps> = ({ patientUuid, pati
               </Table>
             </TableContainer>
             <Pagination
-              forwardText={t('nextPage', 'Next page')}
-              backwardText={t('previousPage', 'Previous page')}
+              {...paginationLabels(t)}
               page={currentPage}
               pageSize={pageSize}
               pageSizes={pageSizes}

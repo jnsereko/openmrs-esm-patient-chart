@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDate, useConfig } from '@openmrs/esm-framework';
 import { EmptyState } from '@openmrs/esm-patient-common-lib';
 import { type OrderItem } from '../visit.resource';
+import { formatDecimal } from '../../../uvl/format-decimal';
 import { type ChartConfig } from '../../../config-schema';
 import styles from '../visit-detail-overview.scss';
 
@@ -63,7 +64,8 @@ const MedicationSummary: React.FC<MedicationSummaryProps> = ({ medications }) =>
                       <>
                         <span className={styles.label01}> {t('dose', 'Dose').toUpperCase()} </span>{' '}
                         <span className={styles.dosage}>
-                          {medication?.order?.dose} {medication?.order?.doseUnits?.display?.toLowerCase()}
+                          {formatDecimal(medication?.order?.dose)}{' '}
+                          {medication?.order?.doseUnits?.display?.toLowerCase()}
                         </span>{' '}
                         {medication.order?.route?.display && (
                           <span>&mdash; {medication?.order?.route?.display?.toLowerCase()} </span>
@@ -78,7 +80,7 @@ const MedicationSummary: React.FC<MedicationSummaryProps> = ({ medications }) =>
                           <>
                             &mdash;{' '}
                             {t('orderDurationAndUnit', 'for {{duration}} {{durationUnit}}', {
-                              duration: medication?.order?.duration,
+                              duration: formatDecimal(medication?.order?.duration),
                               durationUnit: medication?.order?.durationUnits?.display?.toLowerCase(),
                             })}
                           </>
@@ -107,7 +109,7 @@ const MedicationSummary: React.FC<MedicationSummaryProps> = ({ medications }) =>
                             {' '}
                             &mdash;{' '}
                             {t('orderDurationAndUnit', 'for {{duration}} {{durationUnit}}', {
-                              duration: medication?.order?.duration,
+                              duration: formatDecimal(medication?.order?.duration),
                               durationUnit: medication?.order?.durationUnits?.display?.toLowerCase(),
                             })}
                           </span>
@@ -132,7 +134,7 @@ const MedicationSummary: React.FC<MedicationSummaryProps> = ({ medications }) =>
                     {medication?.order?.quantity != null ? (
                       <span>
                         <span className={styles.label01}> {t('quantity', 'Quantity').toUpperCase()}</span>{' '}
-                        {medication?.order?.quantity}
+                        {formatDecimal(medication?.order?.quantity)}
                       </span>
                     ) : null}
                     {medication?.order?.dateStopped ? (

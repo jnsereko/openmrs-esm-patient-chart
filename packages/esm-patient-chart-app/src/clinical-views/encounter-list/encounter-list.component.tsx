@@ -19,6 +19,7 @@ import { useEncounterRows, useFormsJson } from '../hooks';
 import type { TableRow, Encounter, FormattedColumn, Action } from '../types';
 import type { ChartConfig } from '../../config-schema';
 import styles from './encounter-list.scss';
+import { paginationLabels } from '../../uvl/pagination-labels';
 
 export interface EncounterListProps {
   patientUuid: string;
@@ -287,6 +288,7 @@ export const EncounterList: React.FC<EncounterListProps> = ({
             </div>
             <EncounterListDataTable tableHeaders={headers} tableRows={tableRows} />
             <Pagination
+              {...paginationLabels(t)}
               page={currentPage}
               pageSizes={[10, 20, 30, 40, 50]}
               onChange={({ page, pageSize }) => {
