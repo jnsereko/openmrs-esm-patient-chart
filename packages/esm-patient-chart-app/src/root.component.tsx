@@ -32,4 +32,9 @@ export default function Root() {
  * t('Routine')
  * t('Stat')
  * t('On scheduled date')
+ * UVL-EMR #767: the Carbon pagination texts of src/uvl/pagination-labels.ts
+ * t('previousPage', 'Previous page')
+ * t('nextPage', 'Next page')
+ * t('itemsPerPage', 'Items per page')
+ * t('paginationItemRange', '{{min}}–{{max}} of {{count}} items', {min, max, count})
  */
