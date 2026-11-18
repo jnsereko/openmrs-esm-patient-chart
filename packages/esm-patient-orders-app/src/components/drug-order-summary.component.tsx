@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { SkeletonText } from '@carbon/react';
 import { type TFunction } from 'i18next';
 import { type Order, useDrugOrderByUuid } from '@openmrs/esm-patient-common-lib';
 import { formatDecimal } from '../utils/format-decimal';
@@ -13,16 +14,31 @@ interface DrugOrderSummaryProps {
  * — 2,5 millilitre — orale — deux fois par jour — pour 3 jours ». The table printed the server's `display`,
  * « (NEW) Paracetamol Sirop 120mg/5ml: 2.5 Millilitre Orale … », with the order action in English and the
  * dose with a dot (UVL-EMR #752). The fields come from the same request as the expanded row
- * (`useDrugOrderByUuid`); until they arrive, or if they cannot be read, the server's text is shown.
+ * (`useDrugOrderByUuid`), unless the order already carries them. The server's text is never shown: it
+ * flashed for a few seconds after « Signer et fermer » and on each reload (UVL-EMR #765). Until the fields
+ * arrive a one-line placeholder is shown; if they cannot be read, the line is written from what the
+ * order has (its drug or concept and action).
  */
 export function DrugOrderSummary({ order }: DrugOrderSummaryProps) {
   const { t } = useTranslation();
-  const { data: drugOrder } = useDrugOrderByUuid(order.uuid);
+  const hasDrugFields = hasDosingFields(order);
+  const { data: drugOrder, error } = useDrugOrderByUuid(hasDrugFields ? null : order.uuid);
 
-  if (!drugOrder) {
-    return <>{order.display}</>;
+  if (hasDrugFields) {
+    return <>{drugOrderSummaryText(order, t)}</>;
   }
-  return <>{drugOrderSummaryText(drugOrder, t)}</>;
+  if (drugOrder) {
+    return <>{drugOrderSummaryText(drugOrder, t)}</>;
+  }
+  if (error) {
+    return <>{drugOrderSummaryText(order, t)}</>;
+  }
+  return <SkeletonText data-testid="drug-order-summary-skeleton" width="100%" />;
+}
+
+/** Whether the order object was read with its drug and dosing fields (the orders list leaves them out). */
+function hasDosingFields(order: Order) {
+  return order.drug != null && order.dose !== undefined;
 }
 
 export function drugOrderSummaryText(order: Order, t: TFunction) {

@@ -120,6 +120,20 @@ const mockGeneralOrder = {
   },
 };
 
+// The orders as the list request reads them: without a drug order's drug and dosing fields
+function mockListedOrders() {
+  const listed = (mockOrders as unknown as Array<Order>).map(
+    ({ drug, dose, doseUnits, route, frequency, duration, durationUnits, ...order }) => order as Order,
+  );
+  mockUsePatientOrders.mockReturnValue({
+    data: listed,
+    error: undefined,
+    isLoading: false,
+    isValidating: false,
+    mutate: vi.fn(),
+  });
+}
+
 describe('OrderDetailsTable', () => {
   const user = userEvent.setup();
 
@@ -221,7 +235,8 @@ describe('OrderDetailsTable', () => {
       orderNumber: 'ORD-321',
       date: '22-Nov-2024',
       type: 'Drug order',
-      detailedInstructions: 'Permethrin: 1\\.0 Ampule\\(s\\) Oral Once daily 1 Days take after eating',
+      // The mock order carries its dosing fields, so its line is written from them (UVL-EMR #752, #765)
+      detailedInstructions: '^Permethrin — 1 ampule\\(s\\) — oral — once daily — for 1 days$',
       orderedBy: 'admin - Super User',
     };
 
@@ -240,7 +255,7 @@ describe('OrderDetailsTable', () => {
 
     expect(
       screen.getByRole('cell', {
-        name: /\(NEW\) Permethrin\: 1\.0 Ampule\(s\) Oral Once daily 1 Days take after eating/i,
+        name: /^Permethrin — 1 ampule\(s\) — oral — once daily — for 1 days$/i,
       }),
     ).toBeInTheDocument();
     expect(
@@ -258,6 +273,7 @@ describe('OrderDetailsTable', () => {
   it("writes a drug order's line in the session language once its fields are read (UVL-EMR #752)", async () => {
     vi.mocked(getLocale).mockReturnValue('fr');
     const drugOrder = (mockOrders as unknown as Array<Order>).find((order) => order.orderNumber === 'ORD-321');
+    mockListedOrders();
     mockUseDrugOrderByUuid.mockImplementation((uuid) => ({
       data: uuid === drugOrder.uuid ? ({ ...drugOrder, dose: 2.5 } as Order) : null,
       error: undefined,
@@ -275,6 +291,16 @@ describe('OrderDetailsTable', () => {
     // The search still matches the server's text
     await user.type(screen.getByRole('searchbox'), 'take after eating');
     expect(screen.getByRole('cell', { name: /^Permethrin — 2,5/i })).toBeInTheDocument();
+  });
+
+  it("never shows the server's text of a drug order while its fields are read (UVL-EMR #765)", async () => {
+    mockListedOrders();
+    renderOrderDetailsTable();
+
+    await screen.findByRole('table');
+
+    expect(screen.queryByText(/\(NEW\)/)).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('drug-order-summary-skeleton').length).toBeGreaterThan(0);
   });
 
   it('prints the orders in the list when the print button is clicked', async () => {
