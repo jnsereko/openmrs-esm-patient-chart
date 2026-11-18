@@ -1,5 +1,6 @@
 import React, { forwardRef, useEffect, useState, type ComponentProps } from 'react';
 import { TextInput } from '@carbon/react';
+import { formatDecimal } from './format-decimal';
 
 /** What a number field accepts as it is typed: digits with at most one decimal point, a dot or a comma. */
 const decimalTextPattern = /^\d*([.,]\d*)?$/;
@@ -28,9 +29,10 @@ function toNumber(value: unknown): number | undefined {
   return isNaN(number) ? undefined : number;
 }
 
+/** A value the form set (an order being edited), written with the session language's decimal mark (UVL-EMR #767). */
 function textOf(value: unknown) {
   const number = toNumber(value);
-  return number === undefined ? '' : String(number);
+  return number === undefined ? '' : String(formatDecimal(number));
 }
 
 type DecimalTextInputProps = Omit<ComponentProps<typeof TextInput>, 'onChange' | 'value' | 'type'> & {
