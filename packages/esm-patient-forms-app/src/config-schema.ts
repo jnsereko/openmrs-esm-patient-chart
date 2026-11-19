@@ -146,11 +146,47 @@ export const configSchema = {
     },
     _default: [],
   },
+  formSexRestrictions: {
+    _type: Type.Array,
+    _description:
+      'Restricts forms to patients of specific sexes. Each entry names a form (by name or UUID) and the sexes it is offered for. ' +
+      'A listed form is only offered if the sex of the patient is one of its "sexes". ' +
+      'Forms that are not listed are offered for every patient. A patient whose sex is neither "male" nor "female" (other, unknown or not recorded) is offered all forms. ' +
+      'If the same form is listed more than once, the sexes of all its entries are combined.',
+    _elements: {
+      _type: Type.Object,
+      form: {
+        _type: Type.String,
+        _description: 'Name or UUID of the form to restrict',
+        _validators: [
+          validator(
+            (v: unknown) => typeof v === 'string' && v.trim() !== '',
+            'Each restricted form must be specified by name or UUID.',
+          ),
+        ],
+      },
+      sexes: {
+        _type: Type.Array,
+        _elements: {
+          _type: Type.String,
+          _validators: [validators.oneOf(['male', 'female'])],
+        },
+        _description: 'Sexes of the patients this form is offered for: "male", "female" or both',
+        _default: [],
+      },
+    },
+    _default: [],
+  },
 };
 
 export interface FormVisitTypeRestriction {
   form: string;
   visitTypes: Array<string>;
+}
+
+export interface FormSexRestriction {
+  form: string;
+  sexes: Array<'male' | 'female'>;
 }
 
 export interface FormsSection {
@@ -162,6 +198,7 @@ export interface FormEntryConfigSchema {
   htmlFormEntryForms: Array<HtmlFormEntryForm>;
   formSections: Array<FormsSection>;
   formVisitTypeRestrictions: Array<FormVisitTypeRestriction>;
+  formSexRestrictions: Array<FormSexRestriction>;
   customFormsUrl: string;
   orderBy: 'name' | 'most-recent';
   showHtmlFormEntryForms: boolean;

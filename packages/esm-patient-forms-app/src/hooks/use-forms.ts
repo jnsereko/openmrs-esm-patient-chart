@@ -8,7 +8,7 @@ import {
   userHasAccess,
   useSession,
 } from '@openmrs/esm-framework';
-import type { FormEntryConfigSchema, FormVisitTypeRestriction } from '../config-schema';
+import type { FormEntryConfigSchema, FormSexRestriction, FormVisitTypeRestriction } from '../config-schema';
 import type { ListResponse, Form, EncounterWithFormRef, CompletedFormInfo } from '../types';
 import {
   customEncounterRepresentation,
@@ -86,6 +86,31 @@ export function isFormAllowedForVisitType(
   return restrictionsForForm.some((restriction) => restriction.visitTypes?.includes(visitTypeUuid));
 }
 
+/**
+ * Returns whether a form may be offered for a patient of the given sex (the FHIR `gender` of the patient),
+ * according to the `formSexRestrictions` config. A form that is not listed there is always allowed, and so is
+ * every form when the sex of the patient is neither male nor female (other, unknown or not recorded).
+ */
+export function isFormAllowedForPatientSex(
+  form: Pick<Form, 'uuid' | 'name'>,
+  patientSex: string | undefined,
+  restrictions: Array<FormSexRestriction> = [],
+) {
+  if (patientSex !== 'male' && patientSex !== 'female') {
+    return true;
+  }
+
+  const restrictionsForForm = restrictions.filter(
+    (restriction) => restriction.form === form?.uuid || restriction.form === form?.name,
+  );
+
+  if (restrictionsForForm.length === 0) {
+    return true;
+  }
+
+  return restrictionsForForm.some((restriction) => restriction.sexes?.includes(patientSex));
+}
+
 export function useForms(
   patientUuid: string,
   visitUuid?: string,
@@ -93,8 +118,9 @@ export function useForms(
   endDate?: Date,
   orderBy: 'name' | 'most-recent' = 'name',
   visitTypeUuid?: string,
+  patientSex?: string,
 ) {
-  const { formVisitTypeRestrictions } = useConfig<FormEntryConfigSchema>();
+  const { formVisitTypeRestrictions, formSexRestrictions } = useConfig<FormEntryConfigSchema>();
   const allFormsRes = useFormEncounters(patientUuid, visitUuid);
   const encountersRes = useEncountersWithFormRef(patientUuid, startDate, endDate);
   const pastEncounters = encountersRes.data?.data?.results ?? [];
@@ -116,6 +142,12 @@ export function useForms(
   if (formVisitTypeRestrictions?.length) {
     formsToDisplay = formsToDisplay?.filter((formInfo) =>
       isFormAllowedForVisitType(formInfo.form, visitTypeUuid, formVisitTypeRestrictions),
+    );
+  }
+
+  if (formSexRestrictions?.length) {
+    formsToDisplay = formsToDisplay?.filter((formInfo) =>
+      isFormAllowedForPatientSex(formInfo.form, patientSex, formSexRestrictions),
     );
   }
 

@@ -21,7 +21,15 @@ const FormsDashboard: React.FC<FormsDashbaordProps> = ({ handleFormOpen, patient
     data: forms,
     error,
     mutateForms,
-  } = useForms(patient.id, visitContext?.uuid, undefined, undefined, config.orderBy, visitContext?.visitType?.uuid);
+  } = useForms(
+    patient.id,
+    visitContext?.uuid,
+    undefined,
+    undefined,
+    config.orderBy,
+    visitContext?.visitType?.uuid,
+    patient.gender,
+  );
 
   const sections = useMemo(() => {
     return config.formSections?.map((formSection) => ({
