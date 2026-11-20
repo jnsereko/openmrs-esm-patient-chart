@@ -25,6 +25,7 @@ import {
   completeOrderWithSavedResults,
   fetchSavedLabResults,
   updateObservation,
+  addObservation,
 } from './lab-results.resource';
 import LabResultsForm, { type LabResultsFormProps } from './lab-results-form.workspace';
 import {
@@ -46,6 +47,7 @@ const mockUseOrderBasket = vi.mocked(useOrderBasket);
 const mockUpdateOrderResult = vi.mocked(updateOrderResult);
 const mockFetchSavedLabResults = vi.mocked(fetchSavedLabResults);
 const mockUpdateObservation = vi.mocked(updateObservation);
+const mockAddObservation = vi.mocked(addObservation);
 const mockShowSnackbar = vi.mocked(showSnackbar);
 
 vi.mock('./lab-results.resource', async () => ({
@@ -58,6 +60,7 @@ vi.mock('./lab-results.resource', async () => ({
   completeOrderWithSavedResults: vi.fn().mockResolvedValue({}),
   fetchSavedLabResults: vi.fn().mockResolvedValue([]),
   updateObservation: vi.fn().mockResolvedValue({}),
+  addObservation: vi.fn().mockResolvedValue({}),
   useCompletedLabResultsArray: vi.fn(),
 }));
 
@@ -1275,7 +1278,7 @@ describe('LabResultsForm', () => {
     expect(mockUpdateObservation).toHaveBeenCalledWith('second-obs-uuid', { value: 75 });
   });
 
-  test('names a nested panel member whose result could not be updated', async () => {
+  test('names a nested panel member whose result could not be saved', async () => {
     const user = userEvent.setup();
     mockUseOrderConceptByUuids.mockReturnValue({
       concepts: [
@@ -1310,7 +1313,7 @@ describe('LabResultsForm', () => {
       isValidating: false,
       mutate: vi.fn(),
     });
-    mockUpdateObservation.mockRejectedValueOnce(new Error('Internal Server Error'));
+    mockAddObservation.mockRejectedValueOnce(new Error('Internal Server Error'));
 
     render(
       <LabResultsForm
@@ -1380,5 +1383,230 @@ describe('LabResultsForm', () => {
         subtitle: 'Lab results for ORD-1 have been successfully updated',
       }),
     );
+  });
+
+  describe('adding results to an order that has saved results', () => {
+    const memberConcept = (uuid: string, display: string, datatype: 'Numeric' | 'Coded') =>
+      ({
+        uuid,
+        display,
+        setMembers: [],
+        datatype:
+          datatype === 'Numeric'
+            ? { display: 'Numeric', hl7Abbreviation: 'NM' }
+            : { display: 'Coded', hl7Abbreviation: 'CWE' },
+        ...(datatype === 'Numeric'
+          ? { hiAbsolute: 100, lowAbsolute: 0, units: 'mg/L', allowDecimal: true }
+          : { answers: [{ uuid: 'positive-uuid', display: 'Positive' }] }),
+      }) as unknown as LabOrderConcept;
+    const setConcept = {
+      uuid: 'concept-uuid',
+      display: 'Test Set',
+      set: true,
+      datatype: { display: 'N/A', hl7Abbreviation: 'ZZ' },
+      setMembers: [
+        memberConcept('coded-member-uuid', 'Coded Member', 'Coded'),
+        memberConcept('numeric-member-uuid', 'Numeric Member', 'Numeric'),
+      ],
+    } as unknown as LabOrderConcept;
+    const completedOrder = { ...mockOrder, fulfillerStatus: 'COMPLETED' } as Order;
+    const renderEdit = () =>
+      render(<LabResultsForm {...testProps} workspaceProps={{ ...testProps.workspaceProps, order: completedOrder }} />);
+    const mockSavedGroup = (members: Array<Partial<Observation>>) => {
+      mockUseCompletedLabResultsArray.mockReturnValue({
+        completeLabResults: [
+          {
+            uuid: 'group-obs-uuid',
+            concept: { uuid: 'concept-uuid' },
+            obsDatetime: '2026-11-20T08:00:00.000+0000',
+            groupMembers: members,
+          } as Observation,
+        ],
+        isLoading: false,
+        error: null,
+        mutate: vi.fn(),
+      });
+    };
+
+    beforeEach(() => {
+      mockUseOrderConceptByUuids.mockReturnValue({
+        concepts: [setConcept],
+        isLoading: false,
+        error: null,
+        isValidating: false,
+        mutate: vi.fn(),
+      });
+    });
+
+    const noCallContainsUndefinedUuid = () =>
+      expect(JSON.stringify([...mockUpdateObservation.mock.calls, ...mockAddObservation.mock.calls])).not.toContain(
+        'undefined',
+      );
+
+    test('creates the value of a member that has no observation yet, in the saved group', async () => {
+      const user = userEvent.setup();
+      mockSavedGroup([
+        { uuid: 'coded-obs-uuid', concept: { uuid: 'coded-member-uuid' }, value: { uuid: 'positive-uuid' } } as never,
+      ]);
+
+      renderEdit();
+
+      await user.type(await screen.findByLabelText('Numeric Member (0 - 100 mg/L)'), '12');
+      await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+      await waitFor(() => expect(mockCloseWorkspace).toHaveBeenCalled());
+      expect(mockAddObservation).toHaveBeenCalledTimes(1);
+      expect(mockAddObservation).toHaveBeenCalledWith({
+        person: 'patient-uuid',
+        concept: 'numeric-member-uuid',
+        obsDatetime: '2026-11-20T08:00:00.000+0000',
+        encounter: 'encounter-uuid',
+        order: 'order-uuid',
+        value: 12,
+        status: 'FINAL',
+        obsGroup: 'group-obs-uuid',
+      });
+      noCallContainsUndefinedUuid();
+      expect(mockUpdateObservation).toHaveBeenCalledWith('coded-obs-uuid', { value: 'positive-uuid' });
+      expect(mockUpdateObservation).toHaveBeenCalledTimes(1);
+    });
+
+    test('updates a member that already has an observation and creates nothing', async () => {
+      const user = userEvent.setup();
+      mockSavedGroup([
+        { uuid: 'coded-obs-uuid', concept: { uuid: 'coded-member-uuid' }, value: { uuid: 'positive-uuid' } } as never,
+        { uuid: 'numeric-obs-uuid', concept: { uuid: 'numeric-member-uuid' }, value: 10 } as never,
+      ]);
+
+      renderEdit();
+
+      const input = await screen.findByLabelText('Numeric Member (0 - 100 mg/L)');
+      await waitFor(() => expect(input).toHaveValue('10'));
+      await user.clear(input);
+      await user.type(input, '15');
+      await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+      await waitFor(() => expect(mockCloseWorkspace).toHaveBeenCalled());
+      expect(mockUpdateObservation).toHaveBeenCalledWith('numeric-obs-uuid', { value: 15 });
+      expect(mockAddObservation).not.toHaveBeenCalled();
+      noCallContainsUndefinedUuid();
+    });
+
+    test('updates one member and creates the other in the same save', async () => {
+      const user = userEvent.setup();
+      mockUseOrderConceptByUuids.mockReturnValue({
+        concepts: [
+          {
+            ...setConcept,
+            setMembers: [...setConcept.setMembers, memberConcept('second-numeric-uuid', 'Second Numeric', 'Numeric')],
+          } as LabOrderConcept,
+        ],
+        isLoading: false,
+        error: null,
+        isValidating: false,
+        mutate: vi.fn(),
+      });
+      mockSavedGroup([{ uuid: 'numeric-obs-uuid', concept: { uuid: 'numeric-member-uuid' }, value: 10 } as never]);
+
+      renderEdit();
+
+      const existing = await screen.findByLabelText('Numeric Member (0 - 100 mg/L)');
+      await waitFor(() => expect(existing).toHaveValue('10'));
+      await user.clear(existing);
+      await user.type(existing, '11');
+      await user.type(screen.getByLabelText('Second Numeric (0 - 100 mg/L)'), '20');
+      await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+      await waitFor(() => expect(mockCloseWorkspace).toHaveBeenCalled());
+      expect(mockUpdateObservation).toHaveBeenCalledTimes(1);
+      expect(mockUpdateObservation).toHaveBeenCalledWith('numeric-obs-uuid', { value: 11 });
+      expect(mockAddObservation).toHaveBeenCalledTimes(1);
+      expect(mockAddObservation).toHaveBeenCalledWith(
+        expect.objectContaining({ concept: 'second-numeric-uuid', value: 20, obsGroup: 'group-obs-uuid' }),
+      );
+      noCallContainsUndefinedUuid();
+    });
+
+    test('names the member whose result could not be created and keeps the workspace open', async () => {
+      const user = userEvent.setup();
+      mockSavedGroup([
+        { uuid: 'coded-obs-uuid', concept: { uuid: 'coded-member-uuid' }, value: { uuid: 'positive-uuid' } } as never,
+      ]);
+      mockAddObservation.mockRejectedValueOnce(new Error('Internal Server Error'));
+
+      renderEdit();
+
+      await user.type(await screen.findByLabelText('Numeric Member (0 - 100 mg/L)'), '12');
+      await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+      await waitFor(() =>
+        expect(mockShowSnackbar).toHaveBeenCalledWith(
+          expect.objectContaining({ kind: 'error', subtitle: 'Could not save results for Numeric Member' }),
+        ),
+      );
+      expect(mockCloseWorkspace).not.toHaveBeenCalled();
+    });
+
+    test('creates the group with the member when the set has no saved group', async () => {
+      const user = userEvent.setup();
+      mockUseCompletedLabResultsArray.mockReturnValue({
+        completeLabResults: [],
+        isLoading: false,
+        error: null,
+        mutate: vi.fn(),
+      });
+
+      renderEdit();
+
+      await user.type(await screen.findByLabelText('Numeric Member (0 - 100 mg/L)'), '12');
+      await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+      await waitFor(() => expect(mockCloseWorkspace).toHaveBeenCalled());
+      expect(mockAddObservation).toHaveBeenCalledTimes(1);
+      expect(mockAddObservation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          concept: 'concept-uuid',
+          order: 'order-uuid',
+          status: 'FINAL',
+          groupMembers: [{ concept: 'numeric-member-uuid', value: 12, status: 'FINAL', order: 'order-uuid' }],
+        }),
+      );
+      expect(mockUpdateObservation).not.toHaveBeenCalled();
+    });
+
+    test('a first save of a set still posts the group through the encounter and adds nothing to it', async () => {
+      const user = userEvent.setup();
+      mockUseCompletedLabResultsArray.mockReturnValue({
+        completeLabResults: [],
+        isLoading: false,
+        error: null,
+        mutate: vi.fn(),
+      });
+
+      render(<LabResultsForm {...testProps} />);
+
+      await user.type(await screen.findByLabelText('Numeric Member (0 - 100 mg/L)'), '12');
+      await user.click(screen.getByRole('button', { name: /Save and close/i }));
+
+      await waitFor(() => expect(mockCloseWorkspace).toHaveBeenCalled());
+      expect(mockUpdateOrderResult).toHaveBeenCalledWith(
+        'order-uuid',
+        'encounter-uuid',
+        {
+          obs: [
+            expect.objectContaining({
+              concept: { uuid: 'concept-uuid' },
+              status: 'FINAL',
+              groupMembers: [expect.objectContaining({ concept: { uuid: 'numeric-member-uuid' }, value: 12 })],
+            }),
+          ],
+        },
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(mockAddObservation).not.toHaveBeenCalled();
+      expect(mockUpdateObservation).not.toHaveBeenCalled();
+    });
   });
 });

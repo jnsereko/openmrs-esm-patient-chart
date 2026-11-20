@@ -10,7 +10,7 @@ const labEncounterRepresentation =
 const labConceptRepresentation =
   'custom:(uuid,display,name,datatype,set,answers,hiNormal,hiAbsolute,hiCritical,lowNormal,lowAbsolute,lowCritical,units,allowDecimal,' +
   'setMembers:(uuid,display,answers,datatype,hiNormal,hiAbsolute,hiCritical,lowNormal,lowAbsolute,lowCritical,units,allowDecimal,set,setMembers:(uuid)))';
-const conceptObsRepresentation = 'custom:(uuid,display,concept:(uuid,display),groupMembers,value)';
+const conceptObsRepresentation = 'custom:(uuid,display,obsDatetime,concept:(uuid,display),groupMembers,value)';
 
 type NullableNumber = number | null | undefined;
 export interface LabOrderConcept {
@@ -395,6 +395,129 @@ export function updateObservation(observationUuid: string, payload: Record<strin
     },
     body: JSON.stringify(payload),
   });
+}
+
+/** Creates an observation of its own, for a result the order has none for yet (`POST /obs`). */
+export function addObservation(payload: Record<string, any>) {
+  return openmrsFetch(`${restBaseUrl}/obs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export type ResultSaveRequest = {
+  /** The form fields the request saves, to name them if it fails */
+  conceptUuids: Array<string>;
+} & (
+  | { action: 'update'; observationUuid: string; payload: Record<string, any> }
+  | { action: 'create'; payload: Record<string, any> }
+);
+
+function findObservation(observations: Array<Observation>, conceptUuid: string): Observation | undefined {
+  for (const obs of observations ?? []) {
+    if (obs.concept?.uuid === conceptUuid) {
+      return obs;
+    }
+    const member = findObservation(obs.groupMembers, conceptUuid);
+    if (member) {
+      return member;
+    }
+  }
+}
+
+function findParentSet(concepts: Array<LabOrderConcept>, conceptUuid: string): LabOrderConcept | undefined {
+  for (const concept of concepts ?? []) {
+    if (concept.setMembers?.some((member) => member.uuid === conceptUuid)) {
+      return concept;
+    }
+    const parent = findParentSet(concept.setMembers, conceptUuid);
+    if (parent) {
+      return parent;
+    }
+  }
+}
+
+/**
+ * The requests that save typed values over the results an order already has: a value whose test has a
+ * saved observation updates it, a value without one (a set member left empty by an earlier save) is
+ * created, inside the saved result group of its set, or with a new group if the set has none.
+ */
+export function createResultSaveRequests(
+  concepts: Array<LabOrderConcept>,
+  savedResults: Array<Observation>,
+  order: Order,
+  values: Array<[string, unknown]>,
+): Array<ResultSaveRequest> {
+  const requests: Array<ResultSaveRequest> = [];
+  const membersOfMissingGroup = new Map<string, Array<[string, unknown]>>();
+  const memberObservation = (conceptUuid: string, value: unknown, obsGroup?: Observation) => ({
+    person: order.patient.uuid,
+    concept: conceptUuid,
+    obsDatetime: obsGroup?.obsDatetime ?? new Date().toISOString(),
+    encounter: order.encounter.uuid,
+    order: order.uuid,
+    value,
+    status: 'FINAL',
+    ...(obsGroup && { obsGroup: obsGroup.uuid }),
+  });
+
+  values.forEach(([conceptUuid, value]) => {
+    const obs = findObservation(savedResults, conceptUuid);
+    if (obs) {
+      requests.push({ conceptUuids: [conceptUuid], action: 'update', observationUuid: obs.uuid, payload: { value } });
+      return;
+    }
+
+    const parentSet = findParentSet(concepts, conceptUuid);
+    if (!parentSet) {
+      requests.push({
+        conceptUuids: [conceptUuid],
+        action: 'create',
+        payload: memberObservation(conceptUuid, value),
+      });
+      return;
+    }
+
+    const group = findObservation(savedResults, parentSet.uuid);
+    if (group) {
+      requests.push({
+        conceptUuids: [conceptUuid],
+        action: 'create',
+        payload: memberObservation(conceptUuid, value, group),
+      });
+    } else {
+      membersOfMissingGroup.set(parentSet.uuid, [
+        ...(membersOfMissingGroup.get(parentSet.uuid) ?? []),
+        [conceptUuid, value],
+      ]);
+    }
+  });
+
+  membersOfMissingGroup.forEach((members, setUuid) => {
+    requests.push({
+      conceptUuids: members.map(([conceptUuid]) => conceptUuid),
+      action: 'create',
+      payload: {
+        person: order.patient.uuid,
+        concept: setUuid,
+        obsDatetime: new Date().toISOString(),
+        encounter: order.encounter.uuid,
+        order: order.uuid,
+        status: 'FINAL',
+        groupMembers: members.map(([conceptUuid, value]) => ({
+          concept: conceptUuid,
+          value,
+          status: 'FINAL',
+          order: order.uuid,
+        })),
+      },
+    });
+  });
+
+  return requests;
 }
 
 function createGroupMember(member: LabOrderConcept, order: Order, values: Record<string, unknown>, status: string) {

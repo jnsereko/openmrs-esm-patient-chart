@@ -27,8 +27,10 @@ import {
 import { type ConfigObject } from '../config-schema';
 import { type ObservationValue } from '../types/encounter';
 import {
+  addObservation,
   completeOrderWithSavedResults,
   createCompositeObservationPayload,
+  createResultSaveRequests,
   fetchSavedLabResults,
   isCoded,
   isNumeric,
@@ -282,20 +284,17 @@ const LabResultsForm: React.FC<
       const valuesToUpdate = Object.entries(formValues).filter(
         ([, value]) => value !== undefined && value !== null && value !== '',
       );
-      const updateTasks = valuesToUpdate.map(([conceptUuid, value]) => {
-        let obs = savedResults.find((r) => r.concept.uuid === conceptUuid);
-        if (!obs) {
-          for (const result of savedResults) {
-            obs = result.groupMembers?.find((m) => m.concept.uuid === conceptUuid);
-            if (obs) break;
-          }
-        }
-        return updateObservation(obs?.uuid, { value });
-      });
-      const updateResults = await Promise.allSettled(updateTasks);
-      const failedConceptUuids = valuesToUpdate
-        .filter((_, index) => updateResults[index].status === 'rejected')
-        .map(([conceptUuid]) => conceptUuid);
+      const saveRequests = createResultSaveRequests(conceptArray, savedResults, order, valuesToUpdate);
+      const saveResults = await Promise.allSettled(
+        saveRequests.map((request) =>
+          request.action === 'update'
+            ? updateObservation(request.observationUuid, request.payload)
+            : addObservation(request.payload),
+        ),
+      );
+      const failedConceptUuids = saveRequests
+        .filter((_, index) => saveResults[index].status === 'rejected')
+        .flatMap((request) => request.conceptUuids);
 
       // Invalidate caches before closing workspace
       mutateResults();
