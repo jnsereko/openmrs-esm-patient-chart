@@ -23,6 +23,7 @@
   "deleteQuestionConfirmation": "Are you sure you want to delete this question?",
   "deleteQuestionExplainerText": "This action cannot be undone.",
   "diagnosisSaved": "Diagnosis(es) saved successfully",
+  "encounterDatetimeOutsideVisit": "The date of the form is outside its visit (the visit has ended, or the date is before it started). Choose a date within the visit, or start a new visit.",
   "enrolledToProgram": "The patient has been successfully enrolled in the program.",
   "enrollmentAlreadyDiscontinued": "Enrollment already discontinued",
   "enrollmentDiscontinuationNotAllowed": "Enrollment discontinuation not allowed",
