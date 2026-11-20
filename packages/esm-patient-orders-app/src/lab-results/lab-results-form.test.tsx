@@ -1443,7 +1443,7 @@ describe('LabResultsForm', () => {
         'undefined',
       );
 
-    test('creates the value of a member that has no observation yet, in the saved group', async () => {
+    test('adds the value of a member that has no observation yet to the saved group, without obsGroup', async () => {
       const user = userEvent.setup();
       mockSavedGroup([
         { uuid: 'coded-obs-uuid', concept: { uuid: 'coded-member-uuid' }, value: { uuid: 'positive-uuid' } } as never,
@@ -1455,20 +1455,24 @@ describe('LabResultsForm', () => {
       await user.click(screen.getByRole('button', { name: /Save and close/i }));
 
       await waitFor(() => expect(mockCloseWorkspace).toHaveBeenCalled());
-      expect(mockAddObservation).toHaveBeenCalledTimes(1);
-      expect(mockAddObservation).toHaveBeenCalledWith({
-        person: 'patient-uuid',
-        concept: 'numeric-member-uuid',
-        obsDatetime: '2026-11-20T08:00:00.000+0000',
-        encounter: 'encounter-uuid',
-        order: 'order-uuid',
-        value: 12,
-        status: 'FINAL',
-        obsGroup: 'group-obs-uuid',
-      });
-      noCallContainsUndefinedUuid();
+      // The server refuses obsGroup on POST /obs: the member goes to the group, which keeps its other members
+      expect(mockAddObservation).not.toHaveBeenCalled();
+      expect(mockUpdateObservation).toHaveBeenCalledTimes(2);
       expect(mockUpdateObservation).toHaveBeenCalledWith('coded-obs-uuid', { value: 'positive-uuid' });
-      expect(mockUpdateObservation).toHaveBeenCalledTimes(1);
+      expect(mockUpdateObservation).toHaveBeenCalledWith('group-obs-uuid', {
+        groupMembers: [
+          {
+            person: 'patient-uuid',
+            concept: 'numeric-member-uuid',
+            obsDatetime: '2026-11-20T08:00:00.000+0000',
+            order: 'order-uuid',
+            value: 12,
+            status: 'FINAL',
+          },
+        ],
+      });
+      expect(JSON.stringify(mockUpdateObservation.mock.calls)).not.toContain('obsGroup');
+      noCallContainsUndefinedUuid();
     });
 
     test('updates a member that already has an observation and creates nothing', async () => {
@@ -1492,7 +1496,7 @@ describe('LabResultsForm', () => {
       noCallContainsUndefinedUuid();
     });
 
-    test('updates one member and creates the other in the same save', async () => {
+    test('updates one member, then adds the other to the group, in the same save', async () => {
       const user = userEvent.setup();
       mockUseOrderConceptByUuids.mockReturnValue({
         concepts: [
@@ -1518,21 +1522,23 @@ describe('LabResultsForm', () => {
       await user.click(screen.getByRole('button', { name: /Save and close/i }));
 
       await waitFor(() => expect(mockCloseWorkspace).toHaveBeenCalled());
-      expect(mockUpdateObservation).toHaveBeenCalledTimes(1);
-      expect(mockUpdateObservation).toHaveBeenCalledWith('numeric-obs-uuid', { value: 11 });
-      expect(mockAddObservation).toHaveBeenCalledTimes(1);
-      expect(mockAddObservation).toHaveBeenCalledWith(
-        expect.objectContaining({ concept: 'second-numeric-uuid', value: 20, obsGroup: 'group-obs-uuid' }),
-      );
+      expect(mockUpdateObservation).toHaveBeenCalledTimes(2);
+      expect(mockUpdateObservation).toHaveBeenNthCalledWith(1, 'numeric-obs-uuid', { value: 11 });
+      // The group is saved after the member update settles, and lists only the new member
+      expect(mockUpdateObservation).toHaveBeenNthCalledWith(2, 'group-obs-uuid', {
+        groupMembers: [expect.objectContaining({ concept: 'second-numeric-uuid', value: 20 })],
+      });
+      expect(mockAddObservation).not.toHaveBeenCalled();
       noCallContainsUndefinedUuid();
     });
 
-    test('names the member whose result could not be created and keeps the workspace open', async () => {
+    test('names the member whose result could not be added and keeps the workspace open', async () => {
       const user = userEvent.setup();
       mockSavedGroup([
         { uuid: 'coded-obs-uuid', concept: { uuid: 'coded-member-uuid' }, value: { uuid: 'positive-uuid' } } as never,
       ]);
-      mockAddObservation.mockRejectedValueOnce(new Error('Internal Server Error'));
+      // The coded member is updated first and the group second, which the server rejects
+      mockUpdateObservation.mockResolvedValueOnce({} as never).mockRejectedValueOnce(new Error('Bad Request'));
 
       renderEdit();
 
@@ -1568,7 +1574,17 @@ describe('LabResultsForm', () => {
           concept: 'concept-uuid',
           order: 'order-uuid',
           status: 'FINAL',
-          groupMembers: [{ concept: 'numeric-member-uuid', value: 12, status: 'FINAL', order: 'order-uuid' }],
+          encounter: 'encounter-uuid',
+          groupMembers: [
+            {
+              person: 'patient-uuid',
+              concept: 'numeric-member-uuid',
+              obsDatetime: expect.any(String),
+              value: 12,
+              status: 'FINAL',
+              order: 'order-uuid',
+            },
+          ],
         }),
       );
       expect(mockUpdateObservation).not.toHaveBeenCalled();

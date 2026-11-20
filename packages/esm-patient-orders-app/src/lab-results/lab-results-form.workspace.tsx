@@ -31,6 +31,7 @@ import {
   completeOrderWithSavedResults,
   createCompositeObservationPayload,
   createResultSaveRequests,
+  type ResultSaveRequest,
   fetchSavedLabResults,
   isCoded,
   isNumeric,
@@ -285,16 +286,21 @@ const LabResultsForm: React.FC<
         ([, value]) => value !== undefined && value !== null && value !== '',
       );
       const saveRequests = createResultSaveRequests(conceptArray, savedResults, order, valuesToUpdate);
-      const saveResults = await Promise.allSettled(
-        saveRequests.map((request) =>
-          request.action === 'update'
-            ? updateObservation(request.observationUuid, request.payload)
-            : addObservation(request.payload),
-        ),
-      );
-      const failedConceptUuids = saveRequests
-        .filter((_, index) => saveResults[index].status === 'rejected')
-        .flatMap((request) => request.conceptUuids);
+      // Members added to a saved group go after the updates settle, so the group is not saved while one of its members is
+      const isGroupRequest = (request: ResultSaveRequest) => request.action === 'addMembers';
+      const send = (request: ResultSaveRequest) =>
+        request.action === 'create'
+          ? addObservation(request.payload)
+          : updateObservation(request.observationUuid, request.payload);
+      const firstRequests = saveRequests.filter((request) => !isGroupRequest(request));
+      const groupRequests = saveRequests.filter(isGroupRequest);
+      const firstResults = await Promise.allSettled(firstRequests.map(send));
+      const groupResults = await Promise.allSettled(groupRequests.map(send));
+      const failedRequests = [
+        ...firstRequests.filter((_, index) => firstResults[index].status === 'rejected'),
+        ...groupRequests.filter((_, index) => groupResults[index].status === 'rejected'),
+      ];
+      const failedConceptUuids = failedRequests.flatMap((request) => request.conceptUuids);
 
       // Invalidate caches before closing workspace
       mutateResults();

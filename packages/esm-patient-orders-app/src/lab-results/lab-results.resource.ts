@@ -397,7 +397,11 @@ export function updateObservation(observationUuid: string, payload: Record<strin
   });
 }
 
-/** Creates an observation of its own, for a result the order has none for yet (`POST /obs`). */
+/**
+ * Creates an observation of its own, for a result the order has none for yet (`POST /obs`). The server
+ * refuses `obsGroup` on this call, so a member of an existing group goes through `updateObservation`
+ * on the group instead.
+ */
 export function addObservation(payload: Record<string, any>) {
   return openmrsFetch(`${restBaseUrl}/obs`, {
     method: 'POST',
@@ -413,6 +417,8 @@ export type ResultSaveRequest = {
   conceptUuids: Array<string>;
 } & (
   | { action: 'update'; observationUuid: string; payload: Record<string, any> }
+  /** `POST /obs/<group>` with only the new members: the server appends them to the group's members */
+  | { action: 'addMembers'; observationUuid: string; payload: Record<string, any> }
   | { action: 'create'; payload: Record<string, any> }
 );
 
@@ -443,7 +449,10 @@ function findParentSet(concepts: Array<LabOrderConcept>, conceptUuid: string): L
 /**
  * The requests that save typed values over the results an order already has: a value whose test has a
  * saved observation updates it, a value without one (a set member left empty by an earlier save) is
- * created, inside the saved result group of its set, or with a new group if the set has none.
+ * added to the saved result group of its set, or created with a new group if the set has none.
+ * Members added to a group go in one request per group, listing only the new members: the server
+ * appends them and keeps the existing ones. Callers send the `addMembers` requests after the updates
+ * settle, so a member amended in the same save is not touched while its group is being saved.
  */
 export function createResultSaveRequests(
   concepts: Array<LabOrderConcept>,
@@ -452,16 +461,16 @@ export function createResultSaveRequests(
   values: Array<[string, unknown]>,
 ): Array<ResultSaveRequest> {
   const requests: Array<ResultSaveRequest> = [];
+  const memberConcepts = new Map<string, Array<string>>();
   const membersOfMissingGroup = new Map<string, Array<[string, unknown]>>();
-  const memberObservation = (conceptUuid: string, value: unknown, obsGroup?: Observation) => ({
+  const membersOfSavedGroup = new Map<string, { group: Observation; members: Array<Record<string, any>> }>();
+  const memberObservation = (conceptUuid: string, value: unknown, obsDatetime = new Date().toISOString()) => ({
     person: order.patient.uuid,
     concept: conceptUuid,
-    obsDatetime: obsGroup?.obsDatetime ?? new Date().toISOString(),
-    encounter: order.encounter.uuid,
+    obsDatetime,
     order: order.uuid,
     value,
     status: 'FINAL',
-    ...(obsGroup && { obsGroup: obsGroup.uuid }),
   });
 
   values.forEach(([conceptUuid, value]) => {
@@ -476,18 +485,17 @@ export function createResultSaveRequests(
       requests.push({
         conceptUuids: [conceptUuid],
         action: 'create',
-        payload: memberObservation(conceptUuid, value),
+        payload: { ...memberObservation(conceptUuid, value), encounter: order.encounter.uuid },
       });
       return;
     }
 
     const group = findObservation(savedResults, parentSet.uuid);
     if (group) {
-      requests.push({
-        conceptUuids: [conceptUuid],
-        action: 'create',
-        payload: memberObservation(conceptUuid, value, group),
-      });
+      const saved = membersOfSavedGroup.get(group.uuid) ?? { group, members: [] };
+      saved.members.push(memberObservation(conceptUuid, value, group.obsDatetime));
+      membersOfSavedGroup.set(group.uuid, saved);
+      memberConcepts.set(group.uuid, [...(memberConcepts.get(group.uuid) ?? []), conceptUuid]);
     } else {
       membersOfMissingGroup.set(parentSet.uuid, [
         ...(membersOfMissingGroup.get(parentSet.uuid) ?? []),
@@ -496,23 +504,28 @@ export function createResultSaveRequests(
     }
   });
 
+  membersOfSavedGroup.forEach(({ group, members }, groupUuid) => {
+    requests.push({
+      conceptUuids: memberConcepts.get(groupUuid) ?? [],
+      action: 'addMembers',
+      observationUuid: group.uuid,
+      payload: { groupMembers: members },
+    });
+  });
+
   membersOfMissingGroup.forEach((members, setUuid) => {
+    const obsDatetime = new Date().toISOString();
     requests.push({
       conceptUuids: members.map(([conceptUuid]) => conceptUuid),
       action: 'create',
       payload: {
         person: order.patient.uuid,
         concept: setUuid,
-        obsDatetime: new Date().toISOString(),
+        obsDatetime,
         encounter: order.encounter.uuid,
         order: order.uuid,
         status: 'FINAL',
-        groupMembers: members.map(([conceptUuid, value]) => ({
-          concept: conceptUuid,
-          value,
-          status: 'FINAL',
-          order: order.uuid,
-        })),
+        groupMembers: members.map(([conceptUuid, value]) => memberObservation(conceptUuid, value, obsDatetime)),
       },
     });
   });
