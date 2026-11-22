@@ -34,6 +34,7 @@ import { getVisitDates, type Provider, useOrderEncounterForSystemWithVisitDisabl
 import GeneralOrderPanel from './general-order-type/general-order-panel.component';
 // The basket's own copy, not the shared common-lib one: see post-order-encounter.ts
 import { postOrdersOnNewEncounter } from './post-order-encounter';
+import { getOrderRefusalReasons } from './order-refusal';
 import styles from './order-basket.scss';
 
 interface OrderBasketProps {
@@ -70,6 +71,7 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
   );
   const { orders, clearOrders } = useOrderBasket(patient);
   const [ordersWithErrors, setOrdersWithErrors] = useState<OrderBasketItem[]>([]);
+  const [refusalReasons, setRefusalReasons] = useState<Array<string>>([]);
   const {
     visitRequired,
     isLoading: isLoadingEncounterUuid,
@@ -113,6 +115,7 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
   const handleSave = useCallback(async () => {
     const abortController = new AbortController();
     setCreatingEncounterError('');
+    setRefusalReasons([]);
 
     setIsSavingOrders(true);
     // orderEncounterUuid should only be preset if the system does not support visits, and the user has an order encounter today.
@@ -168,8 +171,12 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
         showOrderSuccessToast('@openmrs/esm-patient-orders-app', orders);
       } catch (e) {
         console.error(e);
+        // A refusal names its reason in the field errors; « Invalid Submission » alone tells the prescriber nothing
+        const reasons = getOrderRefusalReasons(e, t);
+        setRefusalReasons(reasons);
         setCreatingEncounterError(
-          e.responseBody?.error?.message ||
+          reasons.join(' ; ') ||
+            e.responseBody?.error?.message ||
             t('tryReopeningTheWorkspaceAgain', 'Please try launching the workspace again'),
         );
       }
@@ -197,8 +204,12 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
         onOrderBasketSubmitted?.(orderEncounterUuid, postedOrders);
       } catch (e) {
         console.error(e);
+        // A refusal names its reason in the field errors; « Invalid Submission » alone tells the prescriber nothing
+        const reasons = getOrderRefusalReasons(e, t);
+        setRefusalReasons(reasons);
         setCreatingEncounterError(
-          e.responseBody?.error?.message ||
+          reasons.join(' ; ') ||
+            e.responseBody?.error?.message ||
             t('tryReopeningTheWorkspaceAgain', 'Please try launching the workspace again'),
         );
       }
@@ -340,7 +351,11 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
           {(creatingEncounterError || errorFetchingEncounterUuid) && (
             <InlineNotification
               kind="error"
-              title={t('tryReopeningTheWorkspaceAgain', 'Please try launching the workspace again')}
+              title={
+                refusalReasons.length
+                  ? t('ordersRefusedByServer', 'The orders were not saved')
+                  : t('tryReopeningTheWorkspaceAgain', 'Please try launching the workspace again')
+              }
               subtitle={creatingEncounterError}
               lowContrast={true}
               className={styles.inlineNotification}

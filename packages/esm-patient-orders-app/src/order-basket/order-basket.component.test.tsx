@@ -218,6 +218,74 @@ describe('OrderBasket', () => {
     });
   });
 
+  describe('when the server refuses the orders (#869)', () => {
+    beforeEach(() => {
+      mockUseSession.mockReturnValue(mockSessionDataResponse.data as any);
+      mockUseOrderBasket.mockReturnValue({
+        orders: [{ display: 'Paracetamol', action: 'NEW', isOrderIncomplete: false }],
+        clearOrders: vi.fn(),
+        setOrders: vi.fn(),
+      } as any);
+      mockUseOrderEncounterForSystemWithVisitDisabled.mockReturnValue({
+        visitRequired: false,
+        isLoading: false,
+        encounterUuid: null,
+        error: null,
+        mutate: vi.fn(),
+      } as any);
+    });
+
+    function renderBasket() {
+      render(
+        <OrderBasket
+          patientUuid={mockPatientUuid}
+          patient={mockPatient}
+          visitContext={null}
+          closeWorkspace={mockCloseWorkspace}
+          orderBasketExtensionProps={mockOrderBasketExtensionProps}
+        />,
+      );
+    }
+
+    it('shows the reason the server gave instead of only « Invalid Submission »', async () => {
+      const user = userEvent.setup();
+      mockPostOrdersOnNewEncounter.mockRejectedValue({
+        responseBody: {
+          error: {
+            message: 'Invalid Submission',
+            fieldErrors: {
+              durationUnits: [
+                {
+                  code: 'DrugOrder.error.durationUnitsRequiredWithDuration',
+                  message: 'Durations units is required when duration is specified',
+                },
+              ],
+            },
+          },
+        },
+      });
+      renderBasket();
+
+      await user.click(screen.getByRole('button', { name: /sign and close/i }));
+
+      expect(await screen.findByText('The orders were not saved')).toBeInTheDocument();
+      expect(screen.getByText('Duration unit is required')).toBeInTheDocument();
+      expect(screen.queryByText('Invalid Submission')).not.toBeInTheDocument();
+      expect(mockCloseWorkspace).not.toHaveBeenCalled();
+    });
+
+    it('keeps the server message when the answer has no field errors', async () => {
+      const user = userEvent.setup();
+      mockPostOrdersOnNewEncounter.mockRejectedValue({ responseBody: { error: { message: 'Invalid Submission' } } });
+      renderBasket();
+
+      await user.click(screen.getByRole('button', { name: /sign and close/i }));
+
+      expect(await screen.findByText('Invalid Submission')).toBeInTheDocument();
+      expect(screen.getByText('Please try launching the workspace again')).toBeInTheDocument();
+    });
+  });
+
   describe('order encounter location (#691)', () => {
     beforeEach(() => {
       mockUseSession.mockReturnValue(mockSessionDataResponse.data as any);
