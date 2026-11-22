@@ -174,6 +174,8 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
         /* Translation keys used by getOrderRefusalReasons (order-refusal.ts, which the extractor does not read):
          * t('durationUnitRequiredErrorMessage', 'Duration unit is required')
          * t('quantityUnitRequiredErrorMessage', 'Quantity unit is required')
+         * t('orderAlreadyActiveErrorMessage', 'This patient already has an active order for this medicine. Stop or revise the existing order.')
+         * t('serverRefusedOrderErrorMessage', 'The server refused the order.')
          */
         // A refusal names its reason in the field errors; « Invalid Submission » alone tells the prescriber nothing
         const reasons = getOrderRefusalReasons(e, t);
