@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { useForm, type UseFormReturn } from 'react-hook-form';
+import { useForm, type FieldErrors, type Resolver, type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { type TFunction } from 'i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { parseDate, useConfig } from '@openmrs/esm-framework';
@@ -28,6 +29,7 @@ export function getStartDateMinimum(
 }
 
 export function useDrugOrderForm(initialOrderBasketItem: DrugOrderBasketItem) {
+  const { t } = useTranslation();
   const medicationOrderFormSchema = useCreateMedicationOrderFormSchema();
 
   const defaultValues = useMemo(
@@ -37,11 +39,61 @@ export function useDrugOrderForm(initialOrderBasketItem: DrugOrderBasketItem) {
 
   const drugOrderForm: UseFormReturn<MedicationOrderFormData> = useForm<MedicationOrderFormData>({
     mode: 'all',
-    resolver: zodResolver(medicationOrderFormSchema),
+    resolver: resolverWithUnitChecks(zodResolver(medicationOrderFormSchema), t),
     defaultValues,
   });
 
   return drugOrderForm;
+}
+
+type UnitErrors = Partial<Record<'durationUnit' | 'quantityUnits', { type: string; message: string }>>;
+
+/**
+ * OpenMRS refuses a duration without a duration unit and a quantity without a quantity unit
+ * (`DrugOrder.error.durationUnitsRequiredWithDuration`, `quantityUnitsRequiredWithQuantity`), and the
+ * order basket then only says "Invalid Submission". The two fields are nullable on their own, so this
+ * links them. It is not a zod refinement: those do not run while another field is invalid, and the unit
+ * error would only show once the rest of the form is filled.
+ */
+export function getUnitErrors(
+  values: Pick<Partial<MedicationOrderFormData>, 'duration' | 'durationUnit' | 'pillsDispensed' | 'quantityUnits'>,
+  t: TFunction,
+): UnitErrors {
+  const errors: UnitErrors = {};
+  if (typeof values?.duration === 'number' && !values.durationUnit?.valueCoded) {
+    errors.durationUnit = {
+      type: 'required',
+      message: t('durationUnitRequiredErrorMessage', 'Duration unit is required'),
+    };
+  }
+  if (typeof values?.pillsDispensed === 'number' && !values.quantityUnits?.valueCoded) {
+    errors.quantityUnits = {
+      type: 'required',
+      message: t('selectQuantityUnitsErrorMessage', 'Quantity unit is required'),
+    };
+  }
+  return errors;
+}
+
+function resolverWithUnitChecks(
+  baseResolver: Resolver<MedicationOrderFormData>,
+  t: TFunction,
+): Resolver<MedicationOrderFormData> {
+  return async (values, context, options) => {
+    const result = await baseResolver(values, context, options);
+    const unitErrors = getUnitErrors(values, t);
+    const extra = Object.entries(getUnitErrors(values, t));
+    if (!extra.length) {
+      return result;
+    }
+    const errors = { ...(result.errors ?? {}) } as Record<string, unknown>;
+    extra.forEach(([name, error]) => {
+      if (!errors[name]) {
+        errors[name] = error;
+      }
+    });
+    return { values: {}, errors: errors as FieldErrors<MedicationOrderFormData> };
+  };
 }
 
 export function drugOrderBasketItemToFormValue(

@@ -218,6 +218,7 @@ export function DrugOrderForm({
     handleSubmit,
     setError,
     setValue,
+    trigger,
     watch,
   } = drugOrderForm;
 
@@ -437,6 +438,27 @@ export function DrugOrderForm({
     [orderConfigObject, daysDurationUnit],
   );
 
+  // A duration needs its unit, so offer days as soon as a duration is typed. Only the unit the site names as
+  // « days » (config `daysDurationUnit`) among the server's duration units is used; with no match the unit
+  // stays empty and the form asks for it.
+  const daysUnit = useMemo(
+    () => durationUnits.find((unit) => unit.valueCoded && unit.valueCoded === daysDurationUnit?.uuid),
+    [durationUnits, daysDurationUnit?.uuid],
+  );
+
+  useEffect(() => {
+    if (daysUnit && typeof watchedDuration === 'number' && !watchedDurationUnit) {
+      setValue('durationUnit', daysUnit, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [daysUnit, watchedDuration, watchedDurationUnit, setValue]);
+
+  // After a refused save, keep the unit errors in step with the duration and quantity as they are edited.
+  useEffect(() => {
+    if (submitCount > 0) {
+      void trigger(['durationUnit', 'quantityUnits']);
+    }
+  }, [submitCount, trigger, watchedDuration, watchedPillsDispensed]);
+
   const orderFrequencies: Array<MedicationFrequency> = useMemo(() => {
     return orderConfigObject?.orderFrequencies ?? [];
   }, [orderConfigObject]);
@@ -444,6 +466,14 @@ export function DrugOrderForm({
   const filterItemsByName = useCallback((menu) => {
     return menu?.item?.value?.toLowerCase().includes(menu?.inputValue?.toLowerCase());
   }, []);
+
+  // With a unit selected (days is offered by default), the menu lists every unit instead of only the selected one.
+  const filterDurationUnits = useCallback(
+    (menu) =>
+      menu?.inputValue === watchedDurationUnit?.value ||
+      menu?.item?.value?.toLowerCase().includes(menu?.inputValue?.toLowerCase()),
+    [watchedDurationUnit?.value],
+  );
 
   const filterItemsBySynonymNames = useCallback((menu) => {
     if (menu?.inputValue?.length) {
@@ -759,7 +789,7 @@ export function DrugOrderForm({
                       items={durationUnits}
                       itemToString={(item: CommonMedicationValueCoded) => item?.value}
                       placeholder={t('durationUnitPlaceholder', 'Duration Unit')}
-                      shouldFilterItem={filterItemsByName}
+                      shouldFilterItem={filterDurationUnits}
                     />
                   </InputWrapper>
                 </Column>

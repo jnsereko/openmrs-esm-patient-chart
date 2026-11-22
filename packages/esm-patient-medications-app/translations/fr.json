@@ -35,6 +35,7 @@
   "duration": "Durée",
   "durationUnit": "Unité",
   "durationUnitPlaceholder": "Unité",
+  "durationUnitRequiredErrorMessage": "Choisissez l'unité de durée",
   "editDispensingUnit": "Unité",
   "editDosageUnitsPlaceholder": "Unité",
   "editDosageUnitsTitle": "Unité",

@@ -1,6 +1,6 @@
 import { configSchema } from '../config-schema';
 import { vi, describe, it, expect } from 'vitest';
-import { durationToDays, getStartDateMinimum } from './drug-order-form.resource';
+import { durationToDays, getStartDateMinimum, getUnitErrors } from './drug-order-form.resource';
 
 const durationUnitsDaysMap = configSchema.durationUnitsDaysMap._default;
 
@@ -67,5 +67,34 @@ describe('getStartDateMinimum', () => {
 
   it('returns undefined when called with no arguments', () => {
     expect(getStartDateMinimum(undefined, undefined, undefined)).toBeUndefined();
+  });
+});
+
+describe('getUnitErrors', () => {
+  const t = ((_key: string, fallback: string) => fallback) as any;
+  const days = { value: 'Days', valueCoded: '1072AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' };
+  const tablet = { value: 'Tablet', valueCoded: '1513AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' };
+
+  it('asks for the duration unit when a duration has none', () => {
+    expect(getUnitErrors({ duration: 5, durationUnit: null }, t).durationUnit?.message).toBe(
+      'Duration unit is required',
+    );
+    expect(getUnitErrors({ duration: 0, durationUnit: undefined }, t).durationUnit).toBeDefined();
+  });
+
+  it('asks for the quantity unit when a quantity has none', () => {
+    expect(getUnitErrors({ pillsDispensed: 10, quantityUnits: null }, t).quantityUnits?.message).toBe(
+      'Quantity unit is required',
+    );
+  });
+
+  it('accepts a unit with its value, and no unit with no value', () => {
+    expect(getUnitErrors({ duration: 5, durationUnit: days, pillsDispensed: 10, quantityUnits: tablet }, t)).toEqual(
+      {},
+    );
+    expect(getUnitErrors({ duration: null, durationUnit: null, pillsDispensed: null, quantityUnits: null }, t)).toEqual(
+      {},
+    );
+    expect(getUnitErrors({}, t)).toEqual({});
   });
 });

@@ -1058,3 +1058,117 @@ describe('genderText', () => {
     expect(genderText(undefined, t)).toBe('');
   });
 });
+
+// OpenMRS refuses a duration without its unit and a quantity without its unit, and the order basket only said
+// "Invalid Submission" (UVL-EMR #869).
+describe('DrugOrderForm - duration and quantity need their units', () => {
+  const noUnits = { durationUnit: null, quantityUnits: null };
+
+  beforeEach(() => {
+    mockUseConfig.mockReturnValue(getDefaultsFromConfigSchema(configSchema) as ConfigObject);
+    mockOpenmrsDatePicker.mockImplementation(({ id, labelText, value, onChange }) => (
+      <>
+        <label htmlFor={id}>{labelText}</label>
+        <input
+          id={id}
+          type="text"
+          value={toDatePickerInputValue(value)}
+          onChange={(evt) => onChange?.(new Date(`${evt.target.value}T00:00:00`))}
+        />
+      </>
+    ));
+    mockUseRequireOutpatientQuantity.mockReturnValue({
+      requireOutpatientQuantity: false,
+      error: null,
+      isLoading: false,
+    });
+  });
+
+  afterEach(() => {
+    mockUseConfig.mockReturnValue(getDefaultsFromConfigSchema(configSchema) as ConfigObject);
+  });
+
+  it('offers days once a duration is typed with no unit, and saves it', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderDrugOrderForm(
+      createNewOrderBasketItem({ ...completeMedicationOrderFields, ...noUnits, duration: null, pillsDispensed: null }),
+      onSave,
+    );
+    expect(screen.getByRole('combobox', { name: /duration unit/i })).toHaveValue('');
+
+    await user.type(screen.getByRole('textbox', { name: /duration/i }), '5');
+
+    await waitFor(() => expect(screen.getByRole('combobox', { name: /duration unit/i })).toHaveValue('Days'));
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0]).toMatchObject({
+      duration: 5,
+      durationUnit: expect.objectContaining({ value: 'Days' }),
+    });
+  });
+
+  it('refuses a duration without its unit when the days unit cannot be identified', async () => {
+    mockUseConfig.mockReturnValue({
+      ...(getDefaultsFromConfigSchema(configSchema) as ConfigObject),
+      daysDurationUnit: { uuid: 'not-in-the-server-list', display: 'Jours' },
+    });
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderDrugOrderForm(
+      createNewOrderBasketItem({ ...completeMedicationOrderFields, ...noUnits, duration: null, pillsDispensed: null }),
+      onSave,
+    );
+
+    await user.type(screen.getByRole('textbox', { name: /duration/i }), '5');
+    expect(screen.getByRole('combobox', { name: /duration unit/i })).toHaveValue('');
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+
+    await waitFor(() => expect(screen.getAllByText('Duration unit is required').length).toBeGreaterThan(0));
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('refuses a quantity without its unit, even while other fields are missing', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderDrugOrderForm(
+      createNewOrderBasketItem({ ...completeMedicationOrderFields, ...noUnits, duration: null, frequency: null }),
+      onSave,
+    );
+
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+
+    await waitFor(() => expect(screen.getAllByText('Quantity unit is required').length).toBeGreaterThan(0));
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('does not block a free-text dosage with no duration and no quantity', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderDrugOrderForm(
+      createNewOrderBasketItem({
+        ...completeMedicationOrderFields,
+        ...noUnits,
+        duration: null,
+        pillsDispensed: null,
+        isFreeTextDosage: true,
+        freeTextDosage: 'Take one tablet twice daily',
+      }),
+      onSave,
+    );
+
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+  });
+
+  it('keeps an existing prescription with its units editable', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderDrugOrderForm(
+      createNewOrderBasketItem({ ...completeMedicationOrderFields, action: 'REVISE', isQuantityManual: true }),
+      onSave,
+    );
+
+    fireEvent.submit(screen.getByRole('form', { name: /add drug order/i }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+  });
+});
