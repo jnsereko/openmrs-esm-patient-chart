@@ -171,6 +171,10 @@ const OrderBasket: React.FC<OrderBasketProps> = ({
         showOrderSuccessToast('@openmrs/esm-patient-orders-app', orders);
       } catch (e) {
         console.error(e);
+        /* Translation keys used by getOrderRefusalReasons (order-refusal.ts, which the extractor does not read):
+         * t('durationUnitRequiredErrorMessage', 'Duration unit is required')
+         * t('quantityUnitRequiredErrorMessage', 'Quantity unit is required')
+         */
         // A refusal names its reason in the field errors; « Invalid Submission » alone tells the prescriber nothing
         const reasons = getOrderRefusalReasons(e, t);
         setRefusalReasons(reasons);
